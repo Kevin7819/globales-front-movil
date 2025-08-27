@@ -13,8 +13,8 @@
 1. *Describe los pasos para probar los cambios...*
 
 ## ✅ Criterios de aceptación
-- [ ] Revisado por al menos 1 miembro del equipo.
-- [ ] Aprobado por tests automáticos.
+- [ ] ...
+- [ ] ...
 
 ## 📸 Capturas de pantalla (si aplica)
 *Agrega aquí las capturas de pantalla relevantes...*
