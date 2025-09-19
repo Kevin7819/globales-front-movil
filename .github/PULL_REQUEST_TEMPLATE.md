@@ -9,7 +9,7 @@
 - [ ] Bug Fix
 - [ ] Refactor
 
-## 🔎 ¿Cómo probar los cambios?
+## 🔎 How to Test
 1. *Describe los pasos para probar los cambios...*
 
 ## ✅ Acceptance Criteria
