@@ -47,7 +47,7 @@ export default function RegisterScreen() {
 
         <View style={styles.brand}>
           <Feather name="globe" size={28} color="#2563EB" />
-          <Text style={styles.brandTitle}>Se tiene que pensar</Text>
+          <Text style={styles.brandTitle}><Orbis></Orbis></Text>
         </View>
 
         <Text style={styles.subtitle}>Crea tu cuenta gratuita</Text>
