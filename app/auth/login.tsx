@@ -25,15 +25,15 @@ export default function LoginScreen() {
       {/* Header */}
       <View style={{ alignItems: "center", marginBottom: 20 }}>
         <Ionicons name="globe-outline" size={48} color="#2563EB" />
-        <Text style={styles.headerTitle}>Se tiene que pensar</Text>
+        <Text style={styles.headerTitle}>Orbis</Text>
         <Text style={styles.headerSubtitle}>Inicia sesión en tu cuenta</Text>
       </View>
 
       {/* Formulario */}
       <View style={styles.form}>
-        <Label>Correo electrónico</Label>
+        <Label>Usuario</Label>
         <Input
-          placeholder="tu@email.com"
+          placeholder="Nombre Usuario"
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
