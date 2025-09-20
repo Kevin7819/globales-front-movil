@@ -61,7 +61,7 @@ export default function DashboardScreen() {
     <ScrollView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Se tiene que pensar</Text>
+        <Text style={styles.headerTitle}>Orbis</Text>
         <Avatar src={user.avatar} fallback="JP" size={40} />
       </View>
 
