@@ -4,7 +4,6 @@ import {
   Text,
   ScrollView,
   StyleSheet,
-  Alert,
   TouchableOpacity,
   ActivityIndicator,
   Platform,
@@ -35,7 +34,8 @@ export default function RegisterScreen() {
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(""); // 👈 estado para mostrar errores
+  const [errorMessage, setErrorMessage] = useState("");
+  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   const handleChange = (key: keyof typeof form, value: string) => {
     setForm({ ...form, [key]: value });
@@ -45,6 +45,17 @@ export default function RegisterScreen() {
     const formatted = date.toISOString().split("T")[0];
     setForm({ ...form, birthDate: formatted });
     setShowDatePicker(false);
+  };
+
+  const showToast = (type: "success" | "error", message: string, redirect?: boolean) => {
+    setToast({ type, message });
+
+    setTimeout(() => {
+      setToast(null);
+      if (redirect) {
+        router.push("/auth/login");
+      }
+    }, 3000); // 3 segundos
   };
 
   const validateForm = () => {
@@ -68,7 +79,7 @@ export default function RegisterScreen() {
       setErrorMessage("Debes seleccionar tu fecha de nacimiento");
       return false;
     }
-    setErrorMessage(""); // 👈 limpia error si todo ok
+    setErrorMessage("");
     return true;
   };
 
@@ -88,14 +99,9 @@ export default function RegisterScreen() {
 
       await registerUser(payload);
 
-      Alert.alert("Éxito", "Usuario registrado correctamente", [
-        {
-          text: "OK",
-          onPress: () => router.push("/auth/login"), // 👈 redirige al login
-        },
-      ]);
+      showToast("success", "Usuario registrado correctamente ✅", true);
     } catch (err: any) {
-      setErrorMessage(err.message || "No se pudo registrar el usuario");
+      showToast("error", err.message || "No se pudo registrar el usuario");
     } finally {
       setLoading(false);
     }
@@ -242,6 +248,18 @@ export default function RegisterScreen() {
           </Text>
         </View>
       </Card>
+
+      {/* Toast flotante */}
+      {toast && (
+        <View
+          style={[
+            styles.toast,
+            toast.type === "success" ? styles.toastSuccess : styles.toastError,
+          ]}
+        >
+          <Text style={styles.toastText}>{toast.message}</Text>
+        </View>
+      )}
     </ScrollView>
   );
 }
@@ -287,9 +305,29 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   errorText: {
-    color: "#DC2626", // rojo para error
+    color: "#DC2626",
     fontSize: 14,
     marginTop: 4,
     marginBottom: 8,
+  },
+  toast: {
+    position: "absolute",
+    bottom: 30,
+    left: 20,
+    right: 20,
+    padding: 14,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  toastText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  toastSuccess: {
+    backgroundColor: "#16A34A",
+  },
+  toastError: {
+    backgroundColor: "#DC2626",
   },
 });
