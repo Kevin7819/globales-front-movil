@@ -1,67 +1,85 @@
-npm start
-# Globales Front Móvil
+# 🌍 Globales Front Móvil
 
-Este repositorio contiene el frontend móvil de la aplicación Globales, desarrollado con React Native y Expo.
-
-## Requisitos previos
-
-- [Node.js](https://nodejs.org/) (recomendado v18 o superior)
-- [Yarn](https://classic.yarnpkg.com/lang/en/docs/install/) o [npm](https://www.npmjs.com/get-npm)
-- [Expo CLI](https://docs.expo.dev/get-started/installation/)
-- Git
-
-## Instalación y ejecución
-
-Sigue estos pasos para clonar e iniciar el proyecto:
-
-1. **Clona el repositorio:**
-
-	```sh
-	git clone https://github.com/Kevin7819/globales-front-movil.git
-	cd globales-front-movil
-	```
-
-2. **Instala las dependencias:**
-
-	Usando Yarn:
-	```sh
-	yarn install
-	```
-	O usando npm:
-	```sh
-	npm install
-	```
-
-3. **Inicia el proyecto con Expo:**
-
-	```sh
-	npx expo start
-	```
-	Esto abrirá Expo DevTools en tu navegador. Desde ahí puedes ejecutar la app en un emulador, dispositivo físico o en la web.
-
-## Estructura del proyecto
-
-- `app/` - Código principal de la aplicación y pantallas.
-- `components/` - Componentes reutilizables de UI.
-- `constants/` - Temas y constantes globales.
-- `hooks/` - Custom hooks.
-- `assets/` - Imágenes y recursos estáticos.
-- `scripts/` - Scripts útiles para el desarrollo.
-
-## Scripts útiles
-
-- `yarn start` o `npm start`: Inicia el servidor de desarrollo de Expo.
-- `yarn android` o `npm run android`: Ejecuta la app en un emulador/dispositivo Android.
-- `yarn ios` o `npm run ios`: Ejecuta la app en un emulador/dispositivo iOS (solo MacOS).
-- `yarn web` o `npm run web`: Ejecuta la app en el navegador.
-- `node scripts/reset-project.js`: Limpia cachés y resetea el proyecto.
-
-## Notas adicionales
-
-- Asegúrate de tener configurado un emulador o la app de Expo Go en tu dispositivo móvil.
-- Si tienes problemas con dependencias, ejecuta `yarn install` o `npm install` nuevamente.
-- Para más información, consulta la [documentación de Expo](https://docs.expo.dev/).
+Frontend móvil de la aplicación **Globales**, desarrollado con **React Native** y **Expo**.  
+Este proyecto busca ofrecer una experiencia ágil, moderna y optimizada para viajeros que desean información cultural, sanitaria y de seguridad.
 
 ---
 
-¡Listo! Ahora puedes contribuir o probar la aplicación Globales Front Móvil.
+## 📋 Requisitos previos
+
+Antes de iniciar, asegúrate de tener instalado:
+
+- [Node.js](https://nodejs.org/) **v18+** (recomendado LTS)
+- [npm](https://www.npmjs.com/) o [Yarn](https://classic.yarnpkg.com/lang/en/docs/install/)
+- [Expo CLI](https://docs.expo.dev/get-started/installation/)
+- [Git](https://git-scm.com/)
+
+---
+
+## 🚀 Instalación y ejecución
+
+1. **Clona el repositorio:**
+   ```sh
+   git clone https://github.com/Kevin7819/globales-front-movil.git
+   cd globales-front-movil
+   ```
+
+2. **Instala las dependencias principales:**
+   ```sh
+   npm install
+   ```
+
+3. **Instala librerías adicionales necesarias para el proyecto:**
+   ```sh
+   npm install expo@~54.0.11 expo-router@~6.0.9 expo-web-browser@~15.0.8 @react-native-community/datetimepicker@8.4.4 react-native-reanimated@~4.1.1
+   npm install react-native-worklets
+   ```
+
+4. **Inicia el servidor de desarrollo con Expo:**
+   ```sh
+   npm start
+   ```
+   Esto abrirá **Expo DevTools** en tu navegador.  
+   Desde ahí puedes ejecutar la app en:
+   - 📱 Emulador Android
+   - 🍏 Simulador iOS (solo MacOS)
+   - 🌐 Navegador (modo web)
+   - 📲 Dispositivo físico usando **Expo Go**
+
+---
+
+## 📂 Estructura del proyecto
+
+```
+├── app/          # Código principal y pantallas
+├── components/   # Componentes reutilizables de UI
+├── constants/    # Temas, estilos y constantes globales
+├── hooks/        # Custom hooks
+├── assets/       # Imágenes y recursos estáticos
+├── scripts/      # Scripts útiles para desarrollo
+└── package.json  # Configuración de dependencias
+```
+
+---
+
+## 🛠️ Scripts útiles
+
+- `npm start` → Inicia el servidor de desarrollo con Expo
+- `npm run android` → Ejecuta en emulador/dispositivo Android
+- `npm run ios` → Ejecuta en emulador iOS (solo MacOS)
+- `npm run web` → Ejecuta en el navegador
+- `node scripts/reset-project.js` → Limpia cachés y resetea el proyecto
+
+---
+
+## 📌 Notas adicionales
+
+- Asegúrate de tener configurado **Android Studio** o **Xcode** si planeas usar emuladores.
+- En caso de errores de dependencias, ejecuta:
+  ```sh
+  rm -rf node_modules
+  npm install
+  ```
+- Para más información consulta la [📖 documentación oficial de Expo](https://docs.expo.dev/).
+
+---
