@@ -1,10 +1,14 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const API_URL = "http://localhost:5089/api";
+const API_URL = "http://192.168.0.101:5089/api";
 
-async function apiFetch(endpoint: string, options: RequestInit = {}, requireAuth = false) {
+export async function apiFetch(
+  endpoint: string,
+  options: RequestInit = {},
+  requireAuth = false
+) {
   const headers: Record<string, string> = {
-  "Content-Type": "application/json",
+    "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
   };
 
@@ -25,6 +29,7 @@ async function apiFetch(endpoint: string, options: RequestInit = {}, requireAuth
 
   return await response.json();
 }
+
 
 //login y register
 export async function loginUser(data: any) {

@@ -14,6 +14,27 @@ Antes de iniciar, asegúrate de tener instalado:
 - [Expo CLI](https://docs.expo.dev/get-started/installation/)
 - [Git](https://git-scm.com/)
 
+modificar el build.gradle
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            url 'https://api.mapbox.com/downloads/v2/releases/maven'
+            authentication {
+                basic(BasicAuthentication)
+            }
+            credentials {
+                username = 'mapbox'
+                password = project.hasProperty("MAPBOX_DOWNLOADS_TOKEN") ? project.MAPBOX_DOWNLOADS_TOKEN : ""
+            }
+        }
+        maven { url 'https://www.jitpack.io' }
+    }
+}
+
+
 ---
 
 ## 🚀 Instalación y ejecución
