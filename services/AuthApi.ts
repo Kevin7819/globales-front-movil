@@ -2,7 +2,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import apiFetch from "./api";
 
 export const AuthApi = {
-  // 🧩 Login
   login: async (userName: string, password: string) => {
     const res = await apiFetch("/Auth/Login", {
       method: "POST",
@@ -20,7 +19,6 @@ export const AuthApi = {
     return res;
   },
 
-  // 🧠 Registro
   register: async (
     userName: string,
     email: string,

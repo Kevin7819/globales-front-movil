@@ -24,7 +24,6 @@ async function apiFetch(endpoint: string, options: RequestInit = {}, requireAuth
       throw new Error(errorText || `HTTP ${response.status}`);
     }
 
-    // Algunos endpoints (como DELETE) no devuelven JSON
     const contentType = response.headers.get("content-type");
     if (contentType && contentType.includes("application/json")) {
       return await response.json();
