@@ -7,26 +7,37 @@ export async function apiFetch(
   options: RequestInit = {},
   requireAuth = false
 ) {
+// Wrapper genérico
+async function apiFetch(endpoint: string, options: RequestInit = {}, requireAuth = false) {
   const headers: Record<string, string> = {
+    "Content-Type": "application/json",
     "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
   };
 
   if (requireAuth) {
-    const token = await AsyncStorage.getItem("authToken");
+    const token = await AsyncStorage.getItem("token");
     if (token) headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  try {
+    const response = await fetch(`${API_URL}${endpoint}`, { ...options, headers });
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(error || "Error en la solicitud");
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("API error:", errorText);
+      throw new Error(errorText || `HTTP ${response.status}`);
+    }
+
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      return await response.json();
+    }
+    return null;
+  } catch (err) {
+    console.error("Fetch error:", err);
+    throw err;
   }
-
   return await response.json();
 }
 
@@ -49,6 +60,4 @@ export async function getUserTrips() {
   return apiFetch("/trips", { method: "GET" }, true);
 }
 
-export async function getUserAlerts() {
-  return apiFetch("/alerts", { method: "GET" }, true);
-}*/
+export default apiFetch;

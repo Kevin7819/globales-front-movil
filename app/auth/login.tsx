@@ -1,89 +1,97 @@
-import { useState } from "react";
+import { Ionicons } from "@expo/vector-icons"
+import AsyncStorage from "@react-native-async-storage/async-storage"
+import { useRouter } from "expo-router"
+import { useState } from "react"
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
   ActivityIndicator,
-} from "react-native";
-import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-
-import { Label } from "../../components/ui/Label";
-import { Input } from "../../components/ui/Input";
-import { Button } from "../../components/ui/Button";
-import { Separator } from "../../components/ui/Separator";
-
-import { loginUser } from "../../services/api";
+  StyleSheet,
+  Text,
+  View
+} from "react-native"
+import { Button } from "../../components/ui/Button"
+import { Input } from "../../components/ui/Input"
+import { Label } from "../../components/ui/Label"
+import { Separator } from "../../components/ui/Separator"
+import { AuthApi } from "../../services/AuthApi"
 
 export default function LoginScreen() {
-  const router = useRouter();
-
-  const [userName, setUserName] = useState(""); 
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const router = useRouter()
+  const [email, setEmail] = useState("")    
+  const [password, setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState("")
+  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null)
 
   const showToast = (type: "success" | "error", message: string, redirect?: boolean) => {
-    setToast({ type, message });
-    setTimeout(() => {
-      setToast(null);
+    setToast({ type, message })
+    setTimeout(async () => {
+      setToast(null)
       if (redirect) {
-        router.push("/dashboard");
+        router.replace("/dashboard")
       }
-    }, 2000);
-  };
+    }, 1800)
+  }
 
   const validateForm = () => {
-    if (!userName.trim() || !password.trim()) {
-      setErrorMessage("Usuario y contraseña son obligatorios");
-      return false;
+    if (!email.trim() || !password.trim()) {  
+      setErrorMessage("Correo electrónico y contraseña son obligatorios")
+      return false
     }
-    setErrorMessage("");
-    return true;
-  };
+    setErrorMessage("")
+    return true
+  }
 
   const handleLogin = async () => {
-    if (!validateForm()) return;
-
-    setLoading(true);
+    if (!validateForm()) return
+    setLoading(true)
     try {
-      const payload = { userName, password }; 
-      const data = await loginUser(payload);
+      const res = await AuthApi.login(email, password) 
+      if (res.isSuccess) {
+        try {
+          if (res.user) {
+            await AsyncStorage.multiSet([
+              ["token", res.user.token],
+              ["userId", String(res.user.id)],
+              ["role", res.user.role],
+            ])
+          }
+        } catch (storageErr) {
+          console.error("Error guardando en AsyncStorage:", storageErr)
+        }
 
-      if (data.isSuccess) {
-        await AsyncStorage.setItem("authToken", data.user.token);
-        await AsyncStorage.setItem("user", JSON.stringify(data.user));
-        showToast("success", "Inicio de sesión exitoso ✅", true);
+        showToast("success", "¡Bienvenido! Redirigiendo al dashboard...", true)
       } else {
-        showToast("error", data.message || "Credenciales inválidas");
+        showToast(
+          "error",
+          res.message && res.message.toLowerCase().includes("invalid")
+            ? "Correo o contraseña incorrectos. Por favor, verifica tus datos."
+            : res.message || "No se pudo iniciar sesión. Intenta nuevamente."
+        )
       }
     } catch (err: any) {
-      showToast("error", err.message || "No se pudo iniciar sesión");
+      console.error("Error en login:", err)
+      showToast("error", "Ocurrió un error inesperado. Intenta nuevamente.")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={{ alignItems: "center", marginBottom: 20 }}>
         <Ionicons name="globe-outline" size={48} color="#2563EB" />
         <Text style={styles.headerTitle}>Orbis</Text>
-        <Text style={styles.headerSubtitle}>Inicia sesión con tu usuario</Text>
+        <Text style={styles.headerSubtitle}>Inicia sesión con tu correo electrónico</Text>
       </View>
 
-      {/* Formulario */}
       <View style={styles.form}>
-        <Label>Usuario</Label>
+        <Label>Correo electrónico</Label>
         <Input
-          placeholder="Ej: Bellaqueo14"
-          value={userName}
-          onChangeText={setUserName}
+          placeholder="Ej: correo@ejemplo.com"
+          value={email}           
+          onChangeText={setEmail} 
           autoCapitalize="none"
+          keyboardType="email-address"
         />
 
         <Label>Contraseña</Label>
@@ -112,7 +120,6 @@ export default function LoginScreen() {
         </Text>
       </View>
 
-      {/* Toast flotante */}
       {toast && (
         <View
           style={[
@@ -124,7 +131,7 @@ export default function LoginScreen() {
         </View>
       )}
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -187,4 +194,4 @@ const styles = StyleSheet.create({
   toastError: {
     backgroundColor: "#DC2626",
   },
-});
+})
