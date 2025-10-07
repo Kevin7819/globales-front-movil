@@ -2,10 +2,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import apiFetch from "./api";
 
 export const AuthApi = {
-  login: async (userName: string, password: string) => {
+  login: async (email: string, password: string) => {
     const res = await apiFetch("/Auth/Login", {
       method: "POST",
-      body: JSON.stringify({ userName, password }),
+      body: JSON.stringify({ email, password }),
     });
 
     if (res.isSuccess && res.user?.token) {

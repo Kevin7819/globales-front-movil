@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const API_URL = "http://localhost:5089/api"; // 👈 mismo endpoint del backend .NET
+const API_URL = "http://localhost:5089/api";
 
 // Wrapper genérico
 async function apiFetch(endpoint: string, options: RequestInit = {}, requireAuth = false) {
@@ -9,7 +9,6 @@ async function apiFetch(endpoint: string, options: RequestInit = {}, requireAuth
     ...(options.headers as Record<string, string>),
   };
 
-  // 🧠 Añadir token JWT si se requiere autenticación
   if (requireAuth) {
     const token = await AsyncStorage.getItem("token");
     if (token) headers["Authorization"] = `Bearer ${token}`;

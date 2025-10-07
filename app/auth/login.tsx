@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons"
+import AsyncStorage from "@react-native-async-storage/async-storage"
 import { useRouter } from "expo-router"
 import { useState } from "react"
 import {
@@ -7,7 +8,6 @@ import {
   Text,
   View
 } from "react-native"
-import AsyncStorage from "@react-native-async-storage/async-storage"
 import { Button } from "../../components/ui/Button"
 import { Input } from "../../components/ui/Input"
 import { Label } from "../../components/ui/Label"
@@ -16,7 +16,7 @@ import { AuthApi } from "../../services/AuthApi"
 
 export default function LoginScreen() {
   const router = useRouter()
-  const [userName, setUserName] = useState("")
+  const [email, setEmail] = useState("")    
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState("")
@@ -33,8 +33,8 @@ export default function LoginScreen() {
   }
 
   const validateForm = () => {
-    if (!userName.trim() || !password.trim()) {
-      setErrorMessage("Usuario y contraseña son obligatorios")
+    if (!email.trim() || !password.trim()) {  
+      setErrorMessage("Correo electrónico y contraseña son obligatorios")
       return false
     }
     setErrorMessage("")
@@ -45,14 +45,15 @@ export default function LoginScreen() {
     if (!validateForm()) return
     setLoading(true)
     try {
-      const res = await AuthApi.login(userName, password)
+      const res = await AuthApi.login(email, password) 
       if (res.isSuccess) {
         try {
-          // Guardar datos en AsyncStorage para móvil y web (Expo)
           if (res.user) {
-            await AsyncStorage.setItem("token", res.user.token)
-            await AsyncStorage.setItem("userId", String(res.user.id))
-            await AsyncStorage.setItem("role", res.user.role)
+            await AsyncStorage.multiSet([
+              ["token", res.user.token],
+              ["userId", String(res.user.id)],
+              ["role", res.user.role],
+            ])
           }
         } catch (storageErr) {
           console.error("Error guardando en AsyncStorage:", storageErr)
@@ -63,7 +64,7 @@ export default function LoginScreen() {
         showToast(
           "error",
           res.message && res.message.toLowerCase().includes("invalid")
-            ? "Usuario o contraseña incorrectos. Por favor, verifica tus datos."
+            ? "Correo o contraseña incorrectos. Por favor, verifica tus datos."
             : res.message || "No se pudo iniciar sesión. Intenta nuevamente."
         )
       }
@@ -80,16 +81,17 @@ export default function LoginScreen() {
       <View style={{ alignItems: "center", marginBottom: 20 }}>
         <Ionicons name="globe-outline" size={48} color="#2563EB" />
         <Text style={styles.headerTitle}>Orbis</Text>
-        <Text style={styles.headerSubtitle}>Inicia sesión con tu usuario</Text>
+        <Text style={styles.headerSubtitle}>Inicia sesión con tu correo electrónico</Text>
       </View>
 
       <View style={styles.form}>
-        <Label>Usuario</Label>
+        <Label>Correo electrónico</Label>
         <Input
-          placeholder="Ej: Bellaqueo14"
-          value={userName}
-          onChangeText={setUserName}
+          placeholder="Ej: correo@ejemplo.com"
+          value={email}           
+          onChangeText={setEmail} 
           autoCapitalize="none"
+          keyboardType="email-address"
         />
 
         <Label>Contraseña</Label>
