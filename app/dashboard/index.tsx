@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
@@ -15,14 +16,15 @@ import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
 import { Progress } from "../../components/ui/Progress";
 import { Avatar } from "../../components/ui/Avatar";
+import { Platform } from "react-native";
 
 export default function DashboardScreen() {
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [user, setUser] = useState<any>(null);
 
-  // 👉 datos mock porque backend no los da
   const [upcomingTrips] = useState([
     {
       id: 1,
@@ -56,33 +58,94 @@ export default function DashboardScreen() {
       id: 2,
       type: "cultural",
       title: "Costumbres en Tokio",
-      description: "Evita señalar con el dedo y quítate los zapatos en interiores",
+      description:
+        "Evita señalar con el dedo y quítate los zapatos en interiores",
       date: "Hace 1 día",
     },
   ]);
 
+  // 🚀 Verificación de autenticación
   useEffect(() => {
-    const loadUser = async () => {
+    const checkAuth = async () => {
       try {
         const savedUser = await AsyncStorage.getItem("user");
-        if (savedUser) {
-          setUser(JSON.parse(savedUser));
+        if (!savedUser) {
+          router.replace("/auth/login");
+          return;
         }
+        setUser(JSON.parse(savedUser));
       } catch (err) {
         console.error("Error cargando usuario:", err);
+        router.replace("/auth/login");
       } finally {
         setLoading(false);
       }
     };
-
-    loadUser();
+    checkAuth();
   }, []);
 
-  if (loading) {
+  // 🚪 Logout
+  const handleLogout = async () => {
+    if (Platform.OS === "web") {
+      // 🧠 En web no existe Alert.alert, así que usamos confirm()
+      const confirmLogout = window.confirm("¿Seguro que querés cerrar sesión?");
+      if (!confirmLogout) return;
+
+      try {
+        setLoggingOut(true);
+        await AsyncStorage.removeItem("user");
+        router.replace("/auth/login");
+      } catch (err) {
+        console.error("Error al cerrar sesión:", err);
+        alert("Error: no se pudo cerrar sesión correctamente.");
+      } finally {
+        setLoggingOut(false);
+      }
+    } else {
+      // 📱 En Android/iOS usamos Alert nativo
+      Alert.alert(
+        "Cerrar sesión",
+        "¿Seguro que querés cerrar sesión?",
+        [
+          { text: "Cancelar", style: "cancel" },
+          {
+            text: "Sí, salir",
+            style: "destructive",
+            onPress: async () => {
+              try {
+                setLoggingOut(true);
+                await AsyncStorage.removeItem("user");
+                router.replace("/auth/login");
+              } catch (err) {
+                console.error("Error al cerrar sesión:", err);
+                Alert.alert("Error", "No se pudo cerrar sesión correctamente.");
+              } finally {
+                setLoggingOut(false);
+              }
+            },
+          },
+        ],
+        { cancelable: true }
+      );
+    }
+  };
+
+
+  if (loading || loggingOut) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <View style={styles.centered}>
         <ActivityIndicator size="large" color="#2563EB" />
-        <Text style={{ marginTop: 8 }}>Cargando dashboard...</Text>
+        <Text style={{ marginTop: 8 }}>
+          {loggingOut ? "Cerrando sesión..." : "Cargando dashboard..."}
+        </Text>
+      </View>
+    );
+  }
+
+  if (!user) {
+    return (
+      <View style={styles.centered}>
+        <Text>Redirigiendo al login...</Text>
       </View>
     );
   }
@@ -154,72 +217,8 @@ export default function DashboardScreen() {
                 {trip.culturalScore}% preparado
               </Text>
             </View>
-
-            <View style={styles.row}>
-              <TouchableOpacity
-                style={styles.button}
-                onPress={() =>
-                  router.push(
-                    `/map?destination=${encodeURIComponent(trip.destination)}`
-                  )
-                }
-              >
-                <Text style={styles.buttonText}>Ver en Mapa</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.button, styles.buttonOutline]}
-                onPress={() => router.push(`/trips/${trip.id}`)}
-              >
-                <Text style={[styles.buttonText, { color: "#2563EB" }]}>
-                  Detalles
-                </Text>
-              </TouchableOpacity>
-            </View>
           </Card>
         ))}
-      </View>
-
-      {/* Quick Actions */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
-        <View style={styles.quickRow}>
-          <TouchableOpacity
-            style={styles.quickCard}
-            onPress={() => router.push("/map")}
-          >
-            <Ionicons name="location-outline" size={32} color="#2563EB" />
-            <Text style={styles.quickTitle}>Explorar Destinos</Text>
-            <Text style={styles.quickDesc}>
-              Descubre información sobre cualquier país
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.quickCard}
-            onPress={() => router.push("/chat")}
-          >
-            <Ionicons name="chatbubble-outline" size={32} color="#16A34A" />
-            <Text style={styles.quickTitle}>Pregunta al Asistente</Text>
-            <Text style={styles.quickDesc}>
-              Resuelve dudas sobre tu viaje
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.quickCard}
-            onPress={() => router.push("/health")}
-          >
-            <Ionicons
-              name="shield-checkmark-outline"
-              size={32}
-              color="#DC2626"
-            />
-            <Text style={styles.quickTitle}>Chequeo de Salud</Text>
-            <Text style={styles.quickDesc}>
-              Verifica requisitos sanitarios
-            </Text>
-          </TouchableOpacity>
-        </View>
       </View>
 
       {/* Alertas */}
@@ -274,12 +273,19 @@ export default function DashboardScreen() {
           <Text>Rol: {user?.role}</Text>
         </Card>
       </View>
+
+      {/* Botón de Logout */}
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <Ionicons name="log-out-outline" size={20} color="#fff" />
+        <Text style={styles.logoutText}>Cerrar sesión</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F9FAFB", padding: 16 },
+  centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -290,30 +296,39 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, fontWeight: "bold", marginBottom: 6, color: "#111827" },
   subtitle: { fontSize: 14, color: "#4B5563", marginBottom: 20 },
   section: { marginBottom: 24 },
-  sectionTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 12, color: "#111827" },
-  rowBetween: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 12,
+    color: "#111827",
+  },
+  rowBetween: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   cardTitle: { fontSize: 16, fontWeight: "bold" },
   cardText: { fontSize: 14, color: "#6B7280" },
   progressLabel: { fontSize: 12, fontWeight: "600", marginBottom: 4 },
   progressDesc: { fontSize: 12, color: "#6B7280" },
   row: { flexDirection: "row", gap: 8, marginTop: 12 },
-  button: { flex: 1, backgroundColor: "#2563EB", padding: 10, borderRadius: 6, alignItems: "center" },
-  buttonOutline: { backgroundColor: "#fff", borderWidth: 1, borderColor: "#2563EB" },
-  buttonText: { color: "#fff", fontSize: 14, fontWeight: "600" },
   alertDate: { fontSize: 12, color: "#9CA3AF", marginTop: 4 },
   profileName: { fontSize: 16, fontWeight: "bold" },
   profileEmail: { fontSize: 12, color: "#6B7280" },
-  quickRow: { flexDirection: "row", justifyContent: "space-between", gap: 12 },
-  quickCard: {
-    flex: 1,
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    padding: 16,
+  logoutButton: {
+    flexDirection: "row",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    justifyContent: "center",
+    backgroundColor: "#DC2626",
+    padding: 14,
+    borderRadius: 8,
+    marginTop: 10,
+    marginBottom: 30,
   },
-  quickTitle: { fontSize: 14, fontWeight: "600", marginTop: 8 },
-  quickDesc: { fontSize: 12, textAlign: "center", color: "#6B7280", marginTop: 4 },
+  logoutText: {
+    color: "#fff",
+    fontWeight: "bold",
+    marginLeft: 8,
+    fontSize: 15,
+  },
 });
