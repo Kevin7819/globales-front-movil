@@ -256,7 +256,7 @@ export default function RegisterScreen() {
               initValueTextStyle={styles.selectorText}
               selectTextStyle={styles.selectorText}
               optionTextStyle={{ color: "#111827" }}
-              selectStyle={styles.selector}
+              selectStyle={styles.select}
               cancelText="Cancelar"
             >
               <View style={styles.selectInner}>
@@ -280,7 +280,7 @@ export default function RegisterScreen() {
               initValueTextStyle={styles.selectorText}
               selectTextStyle={styles.selectorText}
               optionTextStyle={{ color: "#111827" }}
-              selectStyle={styles.selector}
+              selectStyle={styles.select}
               cancelText="Cancelar"
             >
               <View style={styles.selectInner}>

@@ -37,16 +37,12 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
-          "dark": {
-            "backgroundColor": "#000000"
-          }
+          "backgroundColor": "#ffffff"
         }
       ]
     ],
     "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
+      "typedRoutes": true
     },
     "extra": {
       "mapboxAccessToken": "pk.eyJ1Ijoia2V2aW43ODE5IiwiYSI6ImNtZzc4amZudTBmYTgybG9oeXEwYTdzeTYifQ.qKzzE82WbE0Xnwa0KBw0Yw"

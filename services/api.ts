@@ -1,16 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const API_URL = "http://192.168.0.101:5089/api";
+const API_URL = "http://192.168.0.103:5089/api";
 
 export async function apiFetch(
   endpoint: string,
   options: RequestInit = {},
   requireAuth = false
 ) {
-// Wrapper genérico
-async function apiFetch(endpoint: string, options: RequestInit = {}, requireAuth = false) {
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
   };
@@ -33,22 +30,26 @@ async function apiFetch(endpoint: string, options: RequestInit = {}, requireAuth
     if (contentType && contentType.includes("application/json")) {
       return await response.json();
     }
+
     return null;
   } catch (err) {
     console.error("Fetch error:", err);
     throw err;
   }
-  return await response.json();
 }
 
-
-//login y register
 export async function loginUser(data: any) {
-  return apiFetch("/auth/login", { method: "POST", body: JSON.stringify(data) });
+  return apiFetch("/auth/login", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
 }
 
 export async function registerUser(data: any) {
-  return apiFetch("/auth/register", { method: "POST", body: JSON.stringify(data) });
+  return apiFetch("/auth/register", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
 }
 
 /*
@@ -59,5 +60,6 @@ export async function getUserProfile() {
 export async function getUserTrips() {
   return apiFetch("/trips", { method: "GET" }, true);
 }
+*/
 
 export default apiFetch;

@@ -1,74 +1,126 @@
-import MapboxGL, { Camera, FillLayer, ShapeSource, UserLocation } from "@rnmapbox/maps";
+import MapboxGL, {
+  Camera,
+  FillLayer,
+  ShapeSource,
+  UserLocation,
+} from '@rnmapbox/maps';
+
 import Constants from "expo-constants";
 import * as Location from "expo-location";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Modal,
-  PermissionsAndroid,
-  Platform,
-  ScrollView,
+  Dimensions,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { getCountryBorders, getCountryIndicators } from "../../services/location";
+import { getCountryBorders } from "../../services/location";
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 MapboxGL.setAccessToken(Constants.expoConfig?.extra?.mapboxAccessToken ?? "");
 
-export default function MapScreen() {
-  const router = useRouter();
-  const { isoCode = "FRA" } = useLocalSearchParams<{ isoCode?: string }>();
+const COSTA_RICA_COORD: [number, number] = [-84.0907, 9.7489];
 
+export default function MapScreen() {
   const [geoJson, setGeoJson] = useState<any>(null);
-  const [indicators, setIndicators] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [mapFullScreen, setMapFullScreen] = useState(false);
   const [location, setLocation] = useState<[number, number] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const cameraRef = useRef<MapboxGL.Camera>(null);
+  const [zoomLevel, setZoomLevel] = useState(6);
+  
+  const hasLoadedGeoJson = useRef(false);
 
   useEffect(() => {
     const requestPermissions = async () => {
       try {
-        if (Platform.OS === "android") {
-          await PermissionsAndroid.requestMultiple([
-            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-            PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
-          ]);
-        }
-
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== "granted") {
           console.warn("Permiso de ubicación denegado");
+          setLoading(false);
           return;
         }
-
         const current = await Location.getCurrentPositionAsync({});
         setLocation([current.coords.longitude, current.coords.latitude]);
       } catch (err) {
         console.error("Error obteniendo ubicación:", err);
-      }
-    };
-
-    requestPermissions();
-  }, []);
-
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const borders = await getCountryBorders(isoCode);
-        const dataIndicators = await getCountryIndicators(isoCode);
-        setGeoJson(borders);
-        setIndicators(dataIndicators);
-      } catch (err) {
-        console.error("Error loading map data:", err);
       } finally {
         setLoading(false);
       }
     };
-    loadData();
-  }, [isoCode]);
+    requestPermissions();
+  }, []);
+
+  useEffect(() => {
+    const loadGeoJsonData = async () => {
+      if (hasLoadedGeoJson.current) return;
+      hasLoadedGeoJson.current = true;
+
+      const loadId = Math.random().toString(36).substring(2, 8); // ID único para debug
+      console.log(`[${loadId}] Iniciando carga de GeoJSON...`);
+
+      try {
+        const geoData = await getCountryBorders("CRI");
+        console.log(`[${loadId}] Respuesta recibida:`, geoData ? "GeoJSON válido" : "Sin datos");
+
+        if (!geoData) {
+          console.warn(`[${loadId}] Respuesta vacía del servidor`);
+          return;
+        }
+
+        if (geoData.type === "FeatureCollection") {
+          setGeoJson(geoData);
+          console.log(`[${loadId}] 🗺️ GeoJSON establecido correctamente (${geoData.features?.length || 0} features)`);
+        } else if (geoData?.GeoJson?.type === "FeatureCollection") {
+          setGeoJson(geoData.GeoJson);
+          console.log(`[${loadId}] GeoJSON establecido desde propiedad GeoJson`);
+        } else {
+          console.warn(`[${loadId}] Formato inesperado:`, {
+            type: geoData.type,
+            keys: Object.keys(geoData),
+            hasGeoJson: !!geoData.GeoJson
+          });
+        }
+      } catch (err: any) {
+        console.error(`[${loadId}] Error cargando GeoJSON:`, {
+          message: err.message,
+          stack: err.stack,
+          status: err.status
+        });
+      }
+    };
+
+    loadGeoJsonData();
+  }, []);
+
+  const zoomIn = () => {
+    const newZoom = Math.min(zoomLevel + 1, 20);
+    setZoomLevel(newZoom);
+    cameraRef.current?.setCamera({
+      zoomLevel: newZoom,
+      animationDuration: 300,
+    });
+  };
+
+  const zoomOut = () => {
+    const newZoom = Math.max(zoomLevel - 1, 1);
+    setZoomLevel(newZoom);
+    cameraRef.current?.setCamera({
+      zoomLevel: newZoom,
+      animationDuration: 300,
+    });
+  };
+
+  const centerOnUser = () => {
+    if (location) {
+      cameraRef.current?.setCamera({
+        centerCoordinate: location,
+        zoomLevel: 12,
+        animationDuration: 500,
+      });
+    }
+  };
 
   if (loading) {
     return (
@@ -81,124 +133,121 @@ export default function MapScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.push("/dashboard")}>
-          <Text style={styles.backButton}>← Dashboard</Text>
+      <MapboxGL.MapView
+        style={styles.map}
+        zoomEnabled={true}
+        scrollEnabled={true}
+        pitchEnabled={true}
+        rotateEnabled={true}
+        styleURL={MapboxGL.StyleURL.Street}
+      >
+        <Camera
+          ref={cameraRef}
+          zoomLevel={zoomLevel}
+          centerCoordinate={location ?? COSTA_RICA_COORD}
+        />
+        
+        <UserLocation 
+          visible={true} 
+          androidRenderMode={"compass"}
+        />
+        
+        {geoJson && (
+          <ShapeSource id="country" shape={geoJson}>
+            <FillLayer
+              id="country-fill"
+              style={{
+                fillColor: "rgba(37, 99, 235, 0.3)",
+                fillOutlineColor: "#2563EB",
+                fillAntialias: true,
+              }}
+            />
+          </ShapeSource>
+        )}
+      </MapboxGL.MapView>
+
+      {/* Controles de zoom y ubicación */}
+      <View style={styles.controls}>
+        <TouchableOpacity style={styles.button} onPress={zoomIn}>
+          <Text style={styles.buttonText}>+</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Mapa Interactivo</Text>
+        <TouchableOpacity style={styles.button} onPress={zoomOut}>
+          <Text style={styles.buttonText}>-</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={centerOnUser}>
+          <MaterialIcons name="my-location" size={20} color="#000" />
+        </TouchableOpacity>
       </View>
 
-      {/* Mapa arriba */}
-      <TouchableOpacity style={styles.mapWrapper} onPress={() => setMapFullScreen(true)}>
-        <MapboxGL.MapView style={styles.map}>
-          <Camera
-            zoomLevel={location ? 10 : 3}
-            centerCoordinate={location ?? [2.3522, 48.8566]} // París por defecto
-          />
-          <UserLocation visible={true} />
-          {geoJson && (
-            <ShapeSource id="country" shape={geoJson}>
-              <FillLayer id="country-fill" style={{ fillColor: "rgba(37, 99, 235, 0.3)" }} />
-            </ShapeSource>
-          )}
-        </MapboxGL.MapView>
-        <Text style={styles.tapHint}>Toca el mapa para agrandar</Text>
-      </TouchableOpacity>
-
-      {/* Info abajo scrollable */}
-      <ScrollView style={styles.infoSection}>
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Destino Actual</Text>
-          <Text style={styles.cardSubtitle}>{indicators?.countryName ?? "Desconocido"}</Text>
-          <Text style={styles.cardText}>Población: {indicators?.population?.toLocaleString() ?? "N/A"}</Text>
-          <Text style={styles.cardText}>PIB per cápita: ${indicators?.gdpPerCapita ?? "N/A"}</Text>
-          <Text style={styles.cardText}>Esperanza de vida: {indicators?.lifeExpectancy ?? "N/A"}</Text>
-          <Text style={styles.cardText}>Gasto en salud: {indicators?.healthExpenditure ?? "N/A"}%</Text>
+      {/* Estado de carga */}
+      {!geoJson && !loading && (
+        <View style={styles.infoBox}>
+          <Text style={styles.infoText}>Cargando fronteras...</Text>
         </View>
-
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Información Sanitaria</Text>
-          <Text style={styles.cardText}>
-            Mortalidad infantil: {indicators?.infantMortality ?? "N/A"} por 1,000 nacimientos
-          </Text>
-          <Text style={styles.cardText}>
-            Médicos por 1,000 hab.: {indicators?.physiciansPerThousand ?? "N/A"}
-          </Text>
-        </View>
-      </ScrollView>
-
-      {/* Modal de mapa fullscreen */}
-      <Modal visible={mapFullScreen} animationType="slide">
-        <View style={styles.modalContainer}>
-          <TouchableOpacity onPress={() => setMapFullScreen(false)} style={styles.closeButton}>
-            <Text style={styles.closeText}>✕ Cerrar</Text>
-          </TouchableOpacity>
-          <MapboxGL.MapView style={styles.map}>
-            <Camera
-              zoomLevel={location ? 12 : 4}
-              centerCoordinate={location ?? [2.3522, 48.8566]}
-            />
-            <UserLocation visible={true} />
-            {geoJson && (
-              <ShapeSource id="country-full" shape={geoJson}>
-                <FillLayer id="country-fill" style={{ fillColor: "rgba(37, 99, 235, 0.4)" }} />
-              </ShapeSource>
-            )}
-          </MapboxGL.MapView>
-        </View>
-      </Modal>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F9FAFB" },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  loadingText: { marginTop: 8, fontSize: 14, color: "#374151" },
-
-  header: {
-    flexDirection: "row",
+  container: { 
+    flex: 1,
+    backgroundColor: '#f5f5f5'
+  },
+  center: { 
+    flex: 1, 
+    justifyContent: "center", 
+    alignItems: "center",
+    backgroundColor: '#f5f5f5'
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#666'
+  },
+  map: {
+    flex: 1,
+    width: Dimensions.get("window").width,
+    height: Dimensions.get("window").height,
+  },
+  controls: {
+    position: "absolute",
+    right: 10,
+    top: 50,
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "white",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    height: 150,
   },
-  backButton: { color: "#2563EB", fontSize: 14, fontWeight: "600" },
-  headerTitle: { fontSize: 18, fontWeight: "bold", color: "#111827" },
-
-  mapWrapper: { height: 200, margin: 12, borderRadius: 10, overflow: "hidden" },
-  map: { flex: 1 },
-  tapHint: {
-    position: "absolute",
-    bottom: 8,
-    right: 8,
-    fontSize: 10,
-    color: "#fff",
-    backgroundColor: "rgba(0,0,0,0.4)",
-    padding: 4,
-    borderRadius: 6,
-  },
-
-  infoSection: { flex: 1, paddingHorizontal: 12 },
-  card: {
-    backgroundColor: "white",
-    padding: 12,
-    marginBottom: 12,
-    borderRadius: 10,
+  button: {
+    backgroundColor: "#2563EB",
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 10,
     shadowColor: "#000",
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.2,
     shadowRadius: 4,
-    elevation: 2,
+    elevation: 3,
   },
-  cardTitle: { fontSize: 14, fontWeight: "700", color: "#111827", marginBottom: 4 },
-  cardSubtitle: { fontSize: 12, color: "#6B7280", marginBottom: 8 },
-  cardText: { fontSize: 12, color: "#374151", marginTop: 2 },
-
-  modalContainer: { flex: 1, backgroundColor: "white" },
-  closeButton: { padding: 12, alignSelf: "flex-end" },
-  closeText: { color: "#EF4444", fontWeight: "bold", fontSize: 14 },
+  buttonText: { 
+    color: "#fff", 
+    fontSize: 24, 
+    fontWeight: "bold" 
+  },
+  infoBox: {
+    position: "absolute",
+    top: 10,
+    left: 10,
+    right: 10,
+    backgroundColor: "rgba(255,255,255,0.9)",
+    padding: 10,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  infoText: {
+    fontSize: 14,
+    color: "#666",
+  },
 });

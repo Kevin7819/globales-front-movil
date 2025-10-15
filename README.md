@@ -56,6 +56,9 @@ allprojects {
    npm install react-native-worklets
    ```
 
+   para android isntar npm install -g adbkit
+add devices si tienes algun dispositivo conectado
+
 4. **Inicia el servidor de desarrollo con Expo:**
    ```sh
    npm start
