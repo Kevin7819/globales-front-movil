@@ -1,6 +1,9 @@
 # Node modules
 node_modules/
 
+# Package lock
+package-lock.json
+
 # Expo / React Native
 .expo/
 .expo-shared/

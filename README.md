@@ -14,6 +14,27 @@ Antes de iniciar, asegúrate de tener instalado:
 - [Expo CLI](https://docs.expo.dev/get-started/installation/)
 - [Git](https://git-scm.com/)
 
+modificar el build.gradle
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            url 'https://api.mapbox.com/downloads/v2/releases/maven'
+            authentication {
+                basic(BasicAuthentication)
+            }
+            credentials {
+                username = 'mapbox'
+                password = project.hasProperty("MAPBOX_DOWNLOADS_TOKEN") ? project.MAPBOX_DOWNLOADS_TOKEN : ""
+            }
+        }
+        maven { url 'https://www.jitpack.io' }
+    }
+}
+
+
 ---
 
 ## 🚀 Instalación y ejecución
@@ -34,6 +55,9 @@ Antes de iniciar, asegúrate de tener instalado:
    npm install expo@~54.0.11 expo-router@~6.0.9 expo-web-browser@~15.0.8 @react-native-community/datetimepicker@8.4.4 react-native-reanimated@~4.1.1
    npm install react-native-worklets
    ```
+
+   para android isntar npm install -g adbkit
+add devices si tienes algun dispositivo conectado
 
 4. **Inicia el servidor de desarrollo con Expo:**
    ```sh
