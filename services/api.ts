@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const API_URL = "http://192.168.0.103:5089/api";
+const API_URL = "http://192.168.0.104:5089/api";
 
 export async function apiFetch(
   endpoint: string,
@@ -52,14 +52,5 @@ export async function registerUser(data: any) {
   });
 }
 
-/*
-export async function getUserProfile() {
-  return apiFetch("/users/profile", { method: "GET" }, true);
-}
-
-export async function getUserTrips() {
-  return apiFetch("/trips", { method: "GET" }, true);
-}
-*/
 
 export default apiFetch;

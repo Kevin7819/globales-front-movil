@@ -14,7 +14,6 @@ export async function getGeneralAnswer(question: string, lang: string = "es") {
   });
 }
 
-// ✅ ENDPOINTS DE AI PARA MAPAS - ACTUALIZADOS
 export async function getMapDataRaw(countryCode: string) {
   return apiFetch(`/Ai/mapdata/raw/${countryCode}`, { method: "GET" });
 }
@@ -41,7 +40,6 @@ export async function getMapDataByCategory(countryCode: string, category: string
   return apiFetch(`/Ai/mapdata/${category}/${countryCode}`, { method: "GET" });
 }
 
-// En tu services/MapService.ts, modifica las funciones:
 export async function getMapDataSalud(countryCode: string) {
   const data = await getMapDataByCategory(countryCode, "salud");
   return typeof data === 'string' ? JSON.parse(data) : data;
@@ -57,12 +55,10 @@ export async function getMapDataCultura(countryCode: string) {
   return typeof data === 'string' ? JSON.parse(data) : data;
 }
 
-// ✅ FUNCIÓN MEJORADA PARA PROBAR EN EL MAPA
 export async function testAIMapData(countryCode: string = "CRI") {
   try {
-    console.log("🧪 Probando endpoints de AI para mapa...");
+    console.log("Probando endpoints de AI para mapa...");
     
-    // Probar diferentes endpoints
     const endpoints = [
       { name: "GeoJSON", func: () => getMapDataGeoJson(countryCode) },
       { name: "Clean", func: () => getMapDataClean(countryCode) },
@@ -78,17 +74,17 @@ export async function testAIMapData(countryCode: string = "CRI") {
       try {
         console.log(`🔍 Probando ${endpoint.name}...`);
         const data = await endpoint.func();
-        console.log(`✅ ${endpoint.name}:`, data ? "Datos recibidos" : "Sin datos");
+        console.log(`${endpoint.name}:`, data ? "Datos recibidos" : "Sin datos");
         results.push({ endpoint: endpoint.name, success: true, data });
       } catch (error: any) {
-        console.error(`❌ ${endpoint.name}:`, error.message);
+        console.error(` ${endpoint.name}:`, error.message);
         results.push({ endpoint: endpoint.name, success: false, error: error.message });
       }
     }
     
     return results;
   } catch (error) {
-    console.error("💥 Error en testAIMapData:", error);
+    console.error("Error en testAIMapData:", error);
     throw error;
   }
 }

@@ -20,10 +20,12 @@ import {
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { getCountryBorders } from "../../services/location";
 import { getMapDataCultura, getMapDataSalud, getMapDataSeguridad } from "../../services/MapService";
+import { Trip, tripService } from "../../services/TripApi";
 
 MapboxGL.setAccessToken(Constants.expoConfig?.extra?.mapboxAccessToken ?? "");
 
-const COSTA_RICA_COORD: [number, number] = [-84.0907, 9.7489];
+// Coordenadas por defecto (Centroamérica)
+const DEFAULT_COORD: [number, number] = [-84.0907, 9.7489];
 
 export default function MapScreen() {
   const [geoJson, setGeoJson] = useState<any>(null);
@@ -37,25 +39,105 @@ export default function MapScreen() {
   
   const hasLoadedGeoJson = useRef(false);
 
+  const [nearestTrip, setNearestTrip] = useState<Trip | null>(null);
+  const [tripError, setTripError] = useState<string | null>(null);
+  const [hasTrips, setHasTrips] = useState(true);
+
   useEffect(() => {
-    const requestPermissions = async () => {
-      try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== "granted") {
-          console.warn("Permiso de ubicación denegado");
-          setLoading(false);
-          return;
-        }
-        const current = await Location.getCurrentPositionAsync({});
-        setLocation([current.coords.longitude, current.coords.latitude]);
-      } catch (err) {
-        console.error("Error obteniendo ubicación:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    requestPermissions();
+    loadNearestTrip();
+    requestLocationPermission();
   }, []);
+
+  const requestLocationPermission = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        console.warn("Permiso de ubicación denegado");
+        return;
+      }
+      const current = await Location.getCurrentPositionAsync({});
+      setLocation([current.coords.longitude, current.coords.latitude]);
+    } catch (err) {
+      console.error("Error obteniendo ubicación:", err);
+    }
+  };
+
+  const loadNearestTrip = async () => {
+    try {
+      setLoading(true);
+      const trip = await tripService.getNearestTrip();
+      setNearestTrip(trip);
+      setHasTrips(true);
+      console.log("Trip data:", {
+        destination: trip.destination,
+        countryCode: trip.countryCode,
+        latitude: trip.latitude,
+        longitude: trip.longitude
+      });
+    } catch (err: any) {
+      setTripError(err.message);
+      setHasTrips(false);
+      console.error("Error loading nearest trip:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Función mejorada para obtener el código de país
+  const getCurrentCountryCode = (): string => {
+    if (!nearestTrip) {
+      console.log("No hay viaje, usando código por defecto: CRI");
+      return "CRI";
+    }
+
+    const countryCode = nearestTrip.countryCode?.trim().toUpperCase();
+    
+    // Verificar si el código de país es válido (no vacío y tiene al menos 2 caracteres)
+    if (!countryCode || countryCode.length < 2) {
+      console.warn("Código de país inválido o vacío en el viaje:", nearestTrip.countryCode);
+      
+      // Intentar extraer código de país del destino
+      const extractedCode = extractCountryCodeFromDestination(nearestTrip.destination);
+      if (extractedCode) {
+        console.log("Código extraído del destino:", extractedCode);
+        return extractedCode;
+      }
+      
+      console.log("Usando código por defecto: CRI");
+      return "CRI";
+    }
+
+    console.log("Usando código de país del viaje:", countryCode);
+    return countryCode;
+  };
+
+  // Función para extraer código de país del destino
+  const extractCountryCodeFromDestination = (destination: string): string | null => {
+    if (!destination) return null;
+
+    const countryMappings: { [key: string]: string } = {
+      'méxico': 'MX', 'mexico': 'MX',
+      'estados unidos': 'US', 'united states': 'US', 'usa': 'US',
+      'españa': 'ES', 'spain': 'ES',
+      'francia': 'FR', 'france': 'FR',
+      'costa rica': 'CRI', 'costa rica': 'CRI',
+      'colombia': 'CO', 'colombia': 'CO',
+      'argentina': 'AR', 'argentina': 'AR',
+      'brasil': 'BR', 'brazil': 'BR',
+      'chile': 'CL', 'chile': 'CL',
+      'perú': 'PE', 'peru': 'PE',
+    };
+
+    const lowerDestination = destination.toLowerCase();
+    
+    for (const [countryName, code] of Object.entries(countryMappings)) {
+      if (lowerDestination.includes(countryName)) {
+        return code;
+      }
+    }
+
+    return null;
+  };
 
   useEffect(() => {
     const loadMapData = async () => {
@@ -63,28 +145,30 @@ export default function MapScreen() {
       
       setMapLoading(true);
       const loadId = Math.random().toString(36).substring(2, 8);
-      console.log(`[${loadId}] Cargando datos desde: ${dataSource}, categoría: ${selectedCategory}`);
+      const countryCode = getCurrentCountryCode();
+      
+      console.log(`[${loadId}] Cargando datos desde: ${dataSource}, categoría: ${selectedCategory}, país: ${countryCode}`);
 
       try {
         let mapData;
 
         if (dataSource === 'borders') {
           hasLoadedGeoJson.current = true;
-          mapData = await getCountryBorders("CRI");
-          console.log(`[${loadId}] Fronteras cargadas:`, mapData ? "GeoJSON válido" : "Sin datos");
+          mapData = await getCountryBorders(countryCode);
+          console.log(`[${loadId}] Fronteras cargadas para ${countryCode}:`, mapData ? "GeoJSON válido" : "Sin datos");
         } else {
           switch (selectedCategory) {
             case 'salud':
-              mapData = await getMapDataSalud("CRI");
+              mapData = await getMapDataSalud(countryCode);
               break;
             case 'seguridad':
-              mapData = await getMapDataSeguridad("CRI");
+              mapData = await getMapDataSeguridad(countryCode);
               break;
             case 'cultura':
-              mapData = await getMapDataCultura("CRI");
+              mapData = await getMapDataCultura(countryCode); 
               break;
           }
-          console.log(`[${loadId}] AI ${selectedCategory} cargado:`, mapData ? "Datos recibidos" : "Sin datos");
+          console.log(`[${loadId}] AI ${selectedCategory} cargado para ${countryCode}:`, mapData ? "Datos recibidos" : "Sin datos");
         }
 
         if (!mapData) {
@@ -106,31 +190,23 @@ export default function MapScreen() {
         if (processedGeoJson) {
           setGeoJson(processedGeoJson);
           console.log(`[${loadId}] 🗺️ ${dataSource.toUpperCase()} data establecida (${processedGeoJson.features?.length || 0} features)`);
-          
-          // Log de los datos recibidos para debug
-          if (dataSource === 'ai' && processedGeoJson.features) {
-            processedGeoJson.features.forEach((feature: any, idx: number) => {
-              console.log(` ${idx + 1}. ${feature.properties?.name} - Risk: ${feature.properties?.risk_level} - Radius: ${feature.properties?.radius}`);
-            });
-          }
         } else {
           console.warn(`[${loadId}] Formato inesperado:`, mapData);
           setGeoJson(null);
         }
 
       } catch (err: any) {
-        console.error(`[${loadId}] Error cargando ${dataSource}:`, {
-          message: err.message,
-          stack: err.stack,
-        });
+        console.error(`[${loadId}] Error cargando ${dataSource}:`, err.message);
         setGeoJson(null);
       } finally {
         setMapLoading(false);
       }
     };
 
-    loadMapData();
-  }, [dataSource, selectedCategory]);
+    if (!loading) {
+      loadMapData();
+    }
+  }, [dataSource, selectedCategory, loading]);
 
   useEffect(() => {
     if (geoJson && dataSource === 'ai' && geoJson.features?.length > 0) {
@@ -147,6 +223,20 @@ export default function MapScreen() {
       }
     }
   }, [geoJson, dataSource]);
+
+  // Centrar en el viaje si tiene coordenadas
+  useEffect(() => {
+    if (nearestTrip && nearestTrip.latitude && nearestTrip.longitude) {
+      const tripCoordinates: [number, number] = [nearestTrip.longitude, nearestTrip.latitude];
+      console.log("Centrando en viaje:", tripCoordinates);
+      
+      cameraRef.current?.setCamera({
+        centerCoordinate: tripCoordinates,
+        zoomLevel: 10,
+        animationDuration: 1500,
+      });
+    }
+  }, [nearestTrip]);
 
   const zoomIn = () => {
     const newZoom = Math.min(zoomLevel + 1, 20);
@@ -176,10 +266,23 @@ export default function MapScreen() {
     }
   };
 
+  const centerOnTrip = () => {
+    if (nearestTrip && nearestTrip.latitude && nearestTrip.longitude) {
+      const tripCoordinates: [number, number] = [nearestTrip.longitude, nearestTrip.latitude];
+      cameraRef.current?.setCamera({
+        centerCoordinate: tripCoordinates,
+        zoomLevel: 10,
+        animationDuration: 1000,
+      });
+    } else if (location) {
+      centerOnUser();
+    }
+  };
+
   const toggleDataSource = () => {
     const newDataSource = dataSource === 'borders' ? 'ai' : 'borders';
     setDataSource(newDataSource);
-    console.log(`🔄 Cambiando a modo: ${newDataSource}`);
+    console.log(`Cambiando a modo: ${newDataSource}`);
   };
 
   const getCategoryColor = () => {
@@ -190,7 +293,7 @@ export default function MapScreen() {
           dark: "#DC2626",
           pulse: "#FCA5A5",
           light: "#FEE2E2",
-          icon: "🏥"
+          icon: "local-hospital"
         };
       case 'seguridad':
         return { 
@@ -198,7 +301,7 @@ export default function MapScreen() {
           dark: "#1D4ED8",
           pulse: "#93C5FD",
           light: "#EFF6FF",
-          icon: "🛡️"
+          icon: "security"
         };
       case 'cultura':
         return { 
@@ -206,7 +309,7 @@ export default function MapScreen() {
           dark: "#047857",
           pulse: "#6EE7B7",
           light: "#ECFDF5",
-          icon: "🎭"
+          icon: "museum"
         };
       default:
         return { 
@@ -214,55 +317,51 @@ export default function MapScreen() {
           dark: "#1D4ED8",
           pulse: "#93C5FD",
           light: "#EFF6FF",
-          icon: "📍"
+          icon: "place"
         };
     }
   };
 
-  const getCircleRadius = (feature: any) => {
-    if (feature.properties?.radius) {
-      return feature.properties.radius / 10; 
-    }
-    
-    const riskLevel = feature.properties?.risk_level;
-    switch (riskLevel) {
-      case 'critical': return 80;
-      case 'high': return 60;
-      case 'medium': return 40;
-      case 'low': return 20;
-      default: return 30; 
-    }
-  };
+  const baseColors = getCategoryColor();
 
-  const getRiskColor = (feature: any) => {
-    const riskLevel = feature.properties?.risk_level;
-    const baseColors = getCategoryColor();
-    
-    if (!riskLevel) return baseColors;
-
-    const riskColors = {
-      critical: { circle: "#DC2626", pulse: "#FCA5A5", light: "#FEE2E2" },
-      high: { circle: "#EF4444", pulse: "#FCA5A5", light: "#FEE2E2" },
-      medium: { circle: "#F59E0B", pulse: "#FCD34D", light: "#FEF3C7" },
-      low: { circle: "#10B981", pulse: "#6EE7B7", light: "#D1FAE5" }
-    };
-
-    return riskColors[riskLevel as keyof typeof riskColors] || baseColors;
-  };
-
+  // Estado de carga principal
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#2563EB" />
-        <Text style={styles.loadingText}>Cargando mapa...</Text>
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text>Cargando tu próximo viaje...</Text>
       </View>
     );
   }
 
-  const baseColors = getCategoryColor();
+  if (!hasTrips) {
+    return (
+      <View style={styles.centerContainer}>
+        <MaterialIcons name="travel-explore" size={64} color="#6B7280" />
+        <Text style={styles.noTripsTitle}>No tienes viajes programados</Text>
+        <Text style={styles.noTripsText}>
+          Crea un nuevo viaje para ver recomendaciones personalizadas
+        </Text>
+        <TouchableOpacity style={styles.createTripButton} onPress={loadNearestTrip}>
+          <Text style={styles.createTripButtonText}>Reintentar</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
+      {/* Header con información del viaje */}
+      {nearestTrip && (
+        <View style={styles.tripHeader}>
+          <MaterialIcons name="flight" size={16} color="#374151" />
+          <Text style={styles.tripHeaderText}>
+            {nearestTrip.destination} • {getCurrentCountryCode()}
+            {(!nearestTrip.countryCode || nearestTrip.countryCode.trim() === "") && " (Código estimado)"}
+          </Text>
+        </View>
+      )}
+
       <MapboxGL.MapView
         style={styles.map}
         zoomEnabled={true}
@@ -274,7 +373,7 @@ export default function MapScreen() {
         <Camera
           ref={cameraRef}
           zoomLevel={zoomLevel}
-          centerCoordinate={location ?? COSTA_RICA_COORD}
+          centerCoordinate={location || DEFAULT_COORD}
         />
         
         <UserLocation 
@@ -282,7 +381,6 @@ export default function MapScreen() {
           androidRenderMode={"compass"}
         />
         
-        {/* CAPA DE FRONTERAS */}
         {geoJson && dataSource === 'borders' && (
           <ShapeSource id="country" shape={geoJson}>
             <FillLayer
@@ -295,28 +393,28 @@ export default function MapScreen() {
             />
           </ShapeSource>
         )}
-
-        {/* CAPAS PARA DATOS AI */}
         {geoJson && dataSource === 'ai' && (
           <ShapeSource id="ai-data" shape={geoJson}>
-            {/* Capa 1: Círculos de radio (para zonas de riesgo) */}
             <CircleLayer
               id="ai-risk-zones"
               style={{
                 circleRadius: [
-                  'interpolate', ['linear'],
-                  ['zoom'],
-                  10, ['*', ['get', 'radius'], 0.1],  // Escalar según zoom
-                  15, ['*', ['get', 'radius'], 0.2],
-                  20, ['*', ['get', 'radius'], 0.3]
+                  'interpolate', ['exponential', 2], ['zoom'],
+                  1, ['/', ['get', 'radius'], 10000],
+                  5, ['/', ['get', 'radius'], 1000],  
+                  10, ['/', ['get', 'radius'], 100], 
+                  15, ['/', ['get', 'radius'], 10], 
+                  20, ['/', ['get', 'radius'], 1]  
                 ],
+                
+                circlePitchAlignment: 'map',
                 circleColor: [
                   'case',
                   ['==', ['get', 'risk_level'], 'critical'], '#DC2626',
                   ['==', ['get', 'risk_level'], 'high'], '#EF4444',
                   ['==', ['get', 'risk_level'], 'medium'], '#F59E0B',
                   ['==', ['get', 'risk_level'], 'low'], '#10B981',
-                  baseColors.pulse  // Color por defecto
+                  baseColors.pulse
                 ],
                 circleOpacity: 0.2,
                 circleStrokeColor: [
@@ -333,7 +431,6 @@ export default function MapScreen() {
               filter={['has', 'radius']} 
             />
 
-            {/* Capa 2: Puntos centrales */}
             <CircleLayer
               id="ai-points"
               style={{
@@ -359,7 +456,6 @@ export default function MapScreen() {
               }}
             />
 
-            {/* Capa 3: Etiquetas de nombres */}
             <SymbolLayer
               id="ai-labels"
               style={{
@@ -373,28 +469,10 @@ export default function MapScreen() {
                 textFont: ['Arial Unicode MS Bold'],
               }}
             />
-
-            {/* Capa 4: Iconos de riesgo */}
-            <SymbolLayer
-              id="ai-risk-icons"
-              style={{
-                textField: [
-                  'case',
-                  ['==', ['get', 'risk_level'], 'critical'], '🔴',
-                  ['==', ['get', 'risk_level'], 'high'], '🟠',
-                  ['==', ['get', 'risk_level'], 'medium'], '🟡',
-                  ['==', ['get', 'risk_level'], 'low'], '🟢',
-                  baseColors.icon
-                ],
-                textSize: 14,
-                textOffset: [0, -0.5],
-              }}
-            />
           </ShapeSource>
         )}
       </MapboxGL.MapView>
 
-      {/* Controles de zoom y ubicación */}
       <View style={styles.controls}>
         <TouchableOpacity style={styles.button} onPress={zoomIn}>
           <MaterialIcons name="add" size={24} color="#fff" />
@@ -404,6 +482,9 @@ export default function MapScreen() {
         </TouchableOpacity>
         <TouchableOpacity style={styles.button} onPress={centerOnUser}>
           <MaterialIcons name="my-location" size={20} color="#fff" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={centerOnTrip}>
+          <MaterialIcons name="flight" size={20} color="#fff" />
         </TouchableOpacity>
         <TouchableOpacity 
           style={[styles.button, dataSource === 'ai' ? styles.aiModeButton : styles.bordersModeButton]} 
@@ -430,7 +511,6 @@ export default function MapScreen() {
               name="local-hospital" 
               size={20} 
               color={selectedCategory === 'salud' ? "#FFFFFF" : "#EF4444"}
-              style={styles.categoryIcon}
             />
             <Text style={[
               styles.categoryText,
@@ -449,7 +529,6 @@ export default function MapScreen() {
               name="security" 
               size={20} 
               color={selectedCategory === 'seguridad' ? "#FFFFFF" : "#3B82F6"}
-              style={styles.categoryIcon}
             />
             <Text style={[
               styles.categoryText,
@@ -468,7 +547,6 @@ export default function MapScreen() {
               name="museum" 
               size={20} 
               color={selectedCategory === 'cultura' ? "#FFFFFF" : "#10B981"}
-              style={styles.categoryIcon}
             />
             <Text style={[
               styles.categoryText,
@@ -477,24 +555,26 @@ export default function MapScreen() {
           </TouchableOpacity>
         </View>
       )}
+
       {/* Información de estado */}
       <View style={styles.infoContainer}>
         <View style={styles.infoBox}>
-          <Text style={styles.infoText}>
-            {dataSource === 'borders' ? ' Fronteras' : `${baseColors.icon} ${selectedCategory}`} 
-            {mapLoading && ' • Cargando...'}
-            {!mapLoading && geoJson && dataSource === 'ai' && ` • ${geoJson.features?.length || 0} lugares`}
-          </Text>
-        </View>
-        
-        {!geoJson && !loading && (
-          <View style={styles.infoBox}>
-            <Text style={styles.infoText}>Cargando datos del mapa...</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <MaterialIcons 
+              name={baseColors.icon as any} 
+              size={16} 
+              color={baseColors.dark} 
+            />
+            <Text style={styles.infoText}>
+              {dataSource === 'borders' ? ' Fronteras' : ` ${selectedCategory}`} 
+              {mapLoading && ' • Cargando...'}
+              {!mapLoading && geoJson && dataSource === 'ai' && ` • ${geoJson.features?.length || 0} lugares`}
+              {nearestTrip && ` • ${getCurrentCountryCode()}`}
+            </Text>
           </View>
-        )}
+        </View>
       </View>
 
-      {/* Indicador de carga del mapa */}
       {mapLoading && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="small" color="#2563EB" />
@@ -507,21 +587,57 @@ export default function MapScreen() {
   );
 }
 
+// Los estilos se mantienen igual...
 const styles = StyleSheet.create({
   container: { 
     flex: 1,
     backgroundColor: '#f5f5f5'
   },
-  center: { 
+  centerContainer: { 
     flex: 1, 
     justifyContent: "center", 
     alignItems: "center",
-    backgroundColor: '#f5f5f5'
+    backgroundColor: '#f5f5f5',
+    padding: 20
   },
-  loadingText: {
-    marginTop: 10,
+  noTripsTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#374151',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  noTripsText: {
     fontSize: 16,
-    color: '#666'
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  createTripButton: {
+    backgroundColor: '#2563EB',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  createTripButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  tripHeader: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  tripHeaderText: {
+    fontSize: 14,
+    color: '#374151',
+    fontWeight: '500',
+    marginLeft: 8,
   },
   map: {
     flex: 1,
@@ -543,6 +659,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 10,
+    backgroundColor: "#2563EB",
     shadowColor: "#000",
     shadowOpacity: 0.3,
     shadowRadius: 5,
@@ -577,9 +694,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
   },
-  categoryIcon: {
-    marginRight: 5,
-  },
   categoryText: {
     fontSize: 11,
     fontWeight: "600",
@@ -611,6 +725,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#374151",
     fontWeight: "500",
+    marginLeft: 4,
   },
   loadingOverlay: {
     position: "absolute",
