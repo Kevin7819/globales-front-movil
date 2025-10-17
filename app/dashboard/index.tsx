@@ -98,7 +98,11 @@ export default function DashboardScreen() {
           <Ionicons name="globe-outline" size={24} color="#2563EB" />
           <Text style={styles.headerTitle}>Orbis</Text>
         </View>
-        <Avatar src={user?.avatar || ""} fallback={user?.name?.[0]?.toUpperCase() || "?"} size={40} />
+        <Avatar
+          src={user?.avatar || ""}
+          fallback={user?.name?.[0]?.toUpperCase() || "?"}
+          size={40}
+        />
       </View>
 
       <View style={styles.greeting}>
@@ -106,17 +110,25 @@ export default function DashboardScreen() {
         <Text style={styles.title}>¡Hola, {user?.name}!</Text>
       </View>
       <Text style={styles.subtitle}>
-        Aquí tienes un resumen de tus próximos viajes y recomendaciones personalizadas.
+        Aquí tienes un resumen de tus próximos viajes y herramientas inteligentes.
       </Text>
 
-      {/* Botón para ir al mapa */}
-      <TouchableOpacity
-        style={styles.mapButton}
-        onPress={() => router.push("/map")}
-      >
-        <Ionicons name="map-outline" size={18} color="#fff" />
-        <Text style={styles.mapButtonText}>Ver Mapa</Text>
-      </TouchableOpacity>
+      {/* Botones principales */}
+      <View style={{ gap: 12, marginBottom: 24 }}>
+        <TouchableOpacity style={styles.mapButton} onPress={() => router.push("/map")}>
+          <Ionicons name="map-outline" size={18} color="#fff" />
+          <Text style={styles.mapButtonText}>Ver Mapa</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.mapButton, { backgroundColor: "#10B981" }]}
+          onPress={() => router.push({ pathname: "/(tabs)/chat", params: { name: user?.name } })}
+        >
+          <Ionicons name="chatbubbles-outline" size={18} color="#fff" />
+          <Text style={styles.mapButtonText}>Hablar con la IA</Text>
+        </TouchableOpacity>
+
+      </View>
 
       {/* Sección de viajes */}
       <View style={styles.section}>
@@ -157,7 +169,11 @@ export default function DashboardScreen() {
         </View>
         <Card>
           <View style={styles.row}>
-            <Avatar src={user?.avatar || ""} fallback={user?.name?.[0]?.toUpperCase() || "?"} size={48} />
+            <Avatar
+              src={user?.avatar || ""}
+              fallback={user?.name?.[0]?.toUpperCase() || "?"}
+              size={48}
+            />
             <View style={{ marginLeft: 12 }}>
               <Text style={styles.profileName}>{user?.name}</Text>
               <View style={styles.profileRow}>
@@ -170,7 +186,9 @@ export default function DashboardScreen() {
               </View>
               <View style={styles.profileRow}>
                 <Ionicons name="language-outline" size={12} color="#6B7280" />
-                <Text style={styles.profileText}>Idioma: {user?.preferredLanguage}</Text>
+                <Text style={styles.profileText}>
+                  Idioma: {user?.preferredLanguage}
+                </Text>
               </View>
             </View>
           </View>
@@ -188,11 +206,11 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F9FAFB", padding: 16 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
-  header: { 
-    flexDirection: "row", 
-    justifyContent: "space-between", 
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 16 
+    marginBottom: 16,
   },
   headerLeft: {
     flexDirection: "row",
@@ -217,7 +235,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     gap: 8,
-    marginBottom: 20,
   },
   mapButtonText: { color: "#fff", fontWeight: "600", fontSize: 14 },
   section: { marginBottom: 24 },
@@ -228,7 +245,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sectionTitle: { fontSize: 18, fontWeight: "bold", color: "#111827" },
-  rowBetween: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  rowBetween: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   cardTitleRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -236,11 +257,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   cardTitle: { fontSize: 16, fontWeight: "bold" },
-  cardRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
+  cardRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   cardText: { fontSize: 14, color: "#6B7280" },
   row: { flexDirection: "row", alignItems: "center" },
   profileName: { fontSize: 16, fontWeight: "bold", marginBottom: 4 },
@@ -252,10 +269,7 @@ const styles = StyleSheet.create({
   },
   profileEmail: { fontSize: 12, color: "#6B7280" },
   profileText: { fontSize: 12, color: "#374151" },
-  emptyState: {
-    alignItems: "center",
-    paddingVertical: 32,
-  },
+  emptyState: { alignItems: "center", paddingVertical: 32 },
   emptyText: { fontSize: 14, color: "#9CA3AF", marginTop: 12 },
   logoutButton: {
     flexDirection: "row",
