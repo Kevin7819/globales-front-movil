@@ -2,8 +2,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import apiFetch from "./api";
 
 export const AuthApi = {
+  // LOGIN
   login: async (email: string, password: string) => {
-    const res = await apiFetch("/Auth/Login", {
+    const res = await apiFetch("/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });
@@ -19,8 +20,9 @@ export const AuthApi = {
     return res;
   },
 
+  // REGISTER
   register: async (
-    userName: string,
+    name: string,
     email: string,
     password: string,
     countryOfOrigin: string,
@@ -28,16 +30,19 @@ export const AuthApi = {
     birthDate: Date
   ) => {
     const birthDateString = birthDate.toISOString().split("T")[0];
-    const res = await apiFetch("/Auth/Register", {
+
+    const payload = {
+      name, //nombres exactos según tu backend
+      email,
+      password,
+      countryOfOrigin,
+      preferredLanguage,
+      birthDate: birthDateString,
+    };
+
+    const res = await apiFetch("/auth/register", {
       method: "POST",
-      body: JSON.stringify({
-        UserName: userName,
-        Email: email,
-        Password: password,
-        CountryOfOrigin: countryOfOrigin,
-        PreferredLanguage: preferredLanguage,
-        BirthDate: birthDateString,
-      }),
+      body: JSON.stringify(payload),
     });
 
     if (res.isSuccess && res.user?.token) {
@@ -51,6 +56,7 @@ export const AuthApi = {
     return res;
   },
 
+  // LOGOUT
   logout: async () => {
     await AsyncStorage.multiRemove(["token", "userId", "role"]);
   },

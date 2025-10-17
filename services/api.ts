@@ -1,6 +1,21 @@
+import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const API_URL = "http://192.168.0.104:5089/api";
+// Detectar si estamos en web o dispositivo
+const LOCAL_API = "http://localhost:5089/api";
+const MOBILE_API = "http://192.168.0.104:5089/api"; // sirve solo si están en la misma red
+
+//  Definir API_URL según la plataforma 
+const API_URL = Platform.OS === "web" ? LOCAL_API : MOBILE_API;
+
+// Función que obtiene el token según la plataforma
+async function getToken() {
+  if (Platform.OS === "web") {
+    return localStorage.getItem("token");
+  } else {
+    return await AsyncStorage.getItem("token");
+  }
+}
 
 export async function apiFetch(
   endpoint: string,
@@ -13,16 +28,17 @@ export async function apiFetch(
   };
 
   if (requireAuth) {
-    const token = await AsyncStorage.getItem("token");
+    const token = await getToken();
     if (token) headers["Authorization"] = `Bearer ${token}`;
   }
 
   try {
+    console.log("➡️ Fetching:", `${API_URL}${endpoint}`); // debug para ver la URL
     const response = await fetch(`${API_URL}${endpoint}`, { ...options, headers });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("API error:", errorText);
+      console.error("❌ API error:", errorText);
       throw new Error(errorText || `HTTP ${response.status}`);
     }
 
@@ -33,7 +49,7 @@ export async function apiFetch(
 
     return null;
   } catch (err) {
-    console.error("Fetch error:", err);
+    console.error("🚨 Fetch error:", err);
     throw err;
   }
 }
@@ -51,6 +67,5 @@ export async function registerUser(data: any) {
     body: JSON.stringify(data),
   });
 }
-
 
 export default apiFetch;
