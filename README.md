@@ -1,21 +1,70 @@
-# 🌍 Globales Front Móvil
+# 🌍 Globales Front Móvil — Travel Information App
 
-Frontend móvil de la aplicación **Globales**, desarrollado con **React Native** y **Expo**.  
-Este proyecto busca ofrecer una experiencia ágil, moderna y optimizada para viajeros que desean información cultural, sanitaria y de seguridad.
+**Globales Front Móvil** is a modern **mobile frontend** built with **React Native + Expo**,  
+designed to provide travelers with **cultural**, **health**, and **safety** information worldwide.  
+It follows a **modular, scalable architecture** and integrates features like **interactive maps**, **local insights**, and **API-based content**.
 
 ---
 
-## 📋 Requisitos previos
+## 🧠 Tech Stack
 
-Antes de iniciar, asegúrate de tener instalado:
+| Layer | Technologies |
+| :---- | :------------ |
+| **Frontend Framework** | React Native · Expo SDK 54 |
+| **Navigation** | Expo Router · React Navigation |
+| **UI & Animation** | Reanimated 4 · React Native Worklets |
+| **Date & Time** | @react-native-community/datetimepicker |
+| **API Integration** | RESTful Endpoints · Axios (or Fetch) |
+| **Maps Integration** | Mapbox SDK for React Native |
+| **Development Tools** | Node.js 18+ · Expo CLI · ADBKit · Git |
 
-- [Node.js](https://nodejs.org/) **v18+** (recomendado LTS)
-- [npm](https://www.npmjs.com/) o [Yarn](https://classic.yarnpkg.com/lang/en/docs/install/)
-- [Expo CLI](https://docs.expo.dev/get-started/installation/)
-- [Git](https://git-scm.com/)
+---
 
-modificar el build.gradle
+## ⚙️ Installation and Configuration
 
+### 🧩 Requirements
+
+Make sure you have the following tools installed:
+
+- [Node.js 18+](https://nodejs.org/en/download)  
+- npm or yarn  
+- [Expo CLI](https://docs.expo.dev/get-started/installation/)  
+- [Git](https://git-scm.com/)  
+- [Android Studio](https://developer.android.com/studio) (for emulator setup)  
+- Optional: [Xcode](https://developer.apple.com/xcode/) for iOS simulation  
+
+---
+
+### 1️⃣ Clone the repository
+
+```bash
+git clone https://github.com/Kevin7819/globales-front-movil.git
+cd globales-front-movil
+````
+
+---
+
+### 2️⃣ Install dependencies
+
+```bash
+npm install
+```
+
+Then, install required Expo packages and additional libraries:
+
+```bash
+npm install expo@~54.0.11 expo-router@~6.0.9 expo-web-browser@~15.0.8 \
+@react-native-community/datetimepicker@8.4.4 react-native-reanimated@~4.1.1 \
+react-native-worklets
+```
+
+---
+
+### 3️⃣ Android Configuration (Mapbox Setup)
+
+To enable **Mapbox SDK** integration, edit the root-level `build.gradle` file:
+
+```gradle
 allprojects {
     repositories {
         google()
@@ -33,77 +82,97 @@ allprojects {
         maven { url 'https://www.jitpack.io' }
     }
 }
-
-
----
-
-## 🚀 Instalación y ejecución
-
-1. **Clona el repositorio:**
-   ```sh
-   git clone https://github.com/Kevin7819/globales-front-movil.git
-   cd globales-front-movil
-   ```
-
-2. **Instala las dependencias principales:**
-   ```sh
-   npm install
-   ```
-
-3. **Instala librerías adicionales necesarias para el proyecto:**
-   ```sh
-   npm install expo@~54.0.11 expo-router@~6.0.9 expo-web-browser@~15.0.8 @react-native-community/datetimepicker@8.4.4 react-native-reanimated@~4.1.1
-   npm install react-native-worklets
-   ```
-
-   para android isntar npm install -g adbkit
-add devices si tienes algun dispositivo conectado
-
-4. **Inicia el servidor de desarrollo con Expo:**
-   ```sh
-   npm start
-   ```
-   Esto abrirá **Expo DevTools** en tu navegador.  
-   Desde ahí puedes ejecutar la app en:
-   - 📱 Emulador Android
-   - 🍏 Simulador iOS (solo MacOS)
-   - 🌐 Navegador (modo web)
-   - 📲 Dispositivo físico usando **Expo Go**
-
----
-
-## 📂 Estructura del proyecto
-
 ```
-├── app/          # Código principal y pantallas
-├── components/   # Componentes reutilizables de UI
-├── constants/    # Temas, estilos y constantes globales
-├── hooks/        # Custom hooks
-├── assets/       # Imágenes y recursos estáticos
-├── scripts/      # Scripts útiles para desarrollo
-└── package.json  # Configuración de dependencias
+
+> ⚠️ **Note:** Add your `MAPBOX_DOWNLOADS_TOKEN` in your environment variables before building the project.
+
+---
+
+### 4️⃣ Device Setup (Optional)
+
+If you want to test on a real Android device, install **ADBKit** globally:
+
+```bash
+npm install -g adbkit
+```
+
+Then check connected devices:
+
+```bash
+adb devices
 ```
 
 ---
 
-## 🛠️ Scripts útiles
+### 5️⃣ Run the App
 
-- `npm start` → Inicia el servidor de desarrollo con Expo
-- `npm run android` → Ejecuta en emulador/dispositivo Android
-- `npm run ios` → Ejecuta en emulador iOS (solo MacOS)
-- `npm run web` → Ejecuta en el navegador
-- `node scripts/reset-project.js` → Limpia cachés y resetea el proyecto
+Start the Expo development server:
+
+```bash
+npm start
+```
+
+From **Expo DevTools**, you can launch the app on:
+
+* 📱 Android Emulator
+* 🍏 iOS Simulator (macOS only)
+* 🌐 Web (Browser Mode)
+* 📲 Physical Device via **Expo Go**
+
+---
+
+## 🧱 Project Structure
+
+```
+├── app/            # Main app screens and routing
+├── components/     # Reusable UI components
+├── constants/      # Colors, themes, and global settings
+├── hooks/          # Custom hooks for logic reuse
+├── assets/         # Images, icons, and media resources
+├── scripts/        # Development utilities
+└── package.json    # Dependencies and npm scripts
+```
 
 ---
 
-## 📌 Notas adicionales
+## 📜 Available Scripts
 
-- Asegúrate de tener configurado **Android Studio** o **Xcode** si planeas usar emuladores.
-- En caso de errores de dependencias, ejecuta:
-  ```sh
-  rm -rf node_modules
-  npm install
-  ```
-- Para más información consulta la [📖 documentación oficial de Expo](https://docs.expo.dev/).
+| Command                         | Description                                |
+| :------------------------------ | :----------------------------------------- |
+| `npm start`                     | Launches the development server via Expo   |
+| `npm run android`               | Runs the app on Android emulator/device    |
+| `npm run ios`                   | Runs the app on iOS simulator (macOS only) |
+| `npm run web`                   | Runs the app in web mode                   |
+| `node scripts/reset-project.js` | Clears caches and resets the project       |
 
 ---
+
+## ⚠️ Common Issues
+
+| Issue                                             | Cause                    | Solution                                              |
+| :------------------------------------------------ | :----------------------- | :---------------------------------------------------- |
+| `Cannot resolve module 'react-native-reanimated'` | Missing native rebuild   | Run `npx expo prebuild` and reinstall pods            |
+| `Mapbox SDK download failed`                      | Missing or invalid token | Set `MAPBOX_DOWNLOADS_TOKEN` in your environment      |
+| `Device not found`                                | ADB not detecting device | Run `adb devices` and ensure USB debugging is enabled |
+| `Metro bundler stuck on loading`                  | Cache issue              | Run `npx expo start -c` to clear cache                |
+
+---
+
+## 📚 Useful Resources
+
+* [React Native Documentation](https://reactnative.dev/docs/getting-started)
+* [Expo Documentation](https://docs.expo.dev/)
+* [Mapbox React Native SDK](https://docs.mapbox.com/android/maps/guides/)
+* [Reanimated Docs](https://docs.swmansion.com/react-native-reanimated/)
+* [DatetimePicker Docs](https://github.com/react-native-datetimepicker/datetimepicker)
+
+---
+
+## 👨‍💻 Author
+
+**Kevin Abel Venegas Bermúdez**
+🎓 *Computer Engineering Student – Universidad Nacional de Costa Rica*
+📍 Heredia, Sarapiquí, Costa Rica
+🔗 [GitHub Profile](https://github.com/Kevin7819)
+
+```

@@ -12,7 +12,7 @@ import { Button } from "../../components/ui/Button"
 import { Input } from "../../components/ui/Input"
 import { Label } from "../../components/ui/Label"
 import { Separator } from "../../components/ui/Separator"
-import { AuthApi } from "../../services/AuthApi"
+import { AuthApi } from "../../services/authApi"
 
 export default function LoginScreen() {
   const router = useRouter()

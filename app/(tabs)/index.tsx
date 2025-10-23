@@ -29,6 +29,9 @@ export default function HomeScreen() {
         <Link href="/map">
           <ThemedText type="link">Ver Mapa</ThemedText>
         </Link>
+        <Link href="/trips">
+          <ThemedText type="link">Viajes</ThemedText>
+        </Link>
       </ThemedView>
     </ParallaxScrollView>
   );

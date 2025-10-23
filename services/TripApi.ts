@@ -1,24 +1,5 @@
+import { ApiResponse, Trip } from '../types';
 import apiFetch from './api';
-
-export interface Trip {
-  tripId: number;
-  destination: string;
-  departureDate: string;
-  returnDate: string;
-  flightNumber: string;
-  type: string;
-  countryCode: string; 
-  latitude?: number;
-  longitude?: number;
-}
-
-export interface CreateTripRequest {
-  destination: string;
-  departureDate: string;
-  returnDate: string;
-  flightNumber: string;
-  type: string;
-}
 
 export const tripService = {
   async getNearestTrip(): Promise<Trip> {
@@ -29,27 +10,46 @@ export const tripService = {
     return await apiFetch('/Trip', { method: 'GET' }, true);
   },
 
-  async createTrip(tripData: CreateTripRequest): Promise<Trip> {
-    return await apiFetch('/Trip/create', {
-      method: 'POST',
-      body: JSON.stringify(tripData),
-    }, true);
-  },
-
   async getTripById(id: number): Promise<Trip> {
     return await apiFetch(`/Trip/${id}`, { method: 'GET' }, true);
   },
 
-  async updateTrip(id: number, tripData: Partial<CreateTripRequest>): Promise<Trip> {
+  async claimTripByReservationCode(reservationCode: string): Promise<ApiResponse<Trip>> {
+    return await apiFetch('/Trip/claim', {
+      method: 'POST',
+      body: JSON.stringify(reservationCode),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }, true);
+  },
+
+  // Métodos comentados - disponibles cuando el backend los active
+  /*
+  async createTrip(tripData: CreateTripRequest): Promise<Trip> {
+    return await apiFetch('/Trip/Create', {
+      method: 'POST',
+      body: JSON.stringify(tripData),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }, true);
+  },
+
+  async updateTrip(id: number, tripData: UpdateTripRequest): Promise<Trip> {
     return await apiFetch(`/Trip/${id}`, {
       method: 'PUT',
       body: JSON.stringify(tripData),
+      headers: {
+        'Content-Type': 'application/json',
+      },
     }, true);
   },
 
   async deleteTrip(id: number): Promise<void> {
     await apiFetch(`/Trip/${id}`, { method: 'DELETE' }, true);
   }
+  */
 };
 
 export default tripService;

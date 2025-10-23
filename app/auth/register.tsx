@@ -17,8 +17,8 @@ import { Card } from "../../components/ui/Card"
 import { Input } from "../../components/ui/Input"
 import { Label } from "../../components/ui/Label"
 import { Separator } from "../../components/ui/Separator"
-import { AuthApi } from "../../services/AuthApi"
-import { fetchCountries, fetchLanguages } from "../../services/LocationApi"
+import { AuthApi } from "../../services/authApi"
+import { fetchCountries, fetchLanguages } from "../../services/locationApi"
 
 export default function RegisterScreen() {
   const router = useRouter()

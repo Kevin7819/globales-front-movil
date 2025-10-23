@@ -1,5 +1,5 @@
-import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Platform } from "react-native";
 
 // Detectar si estamos en web o dispositivo
 const LOCAL_API = "http://localhost:5089/api";
@@ -33,12 +33,12 @@ export async function apiFetch(
   }
 
   try {
-    console.log("➡️ Fetching:", `${API_URL}${endpoint}`); // debug para ver la URL
+    console.log("Fetching:", `${API_URL}${endpoint}`); // debug para ver la URL
     const response = await fetch(`${API_URL}${endpoint}`, { ...options, headers });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("❌ API error:", errorText);
+      console.error("API error:", errorText);
       throw new Error(errorText || `HTTP ${response.status}`);
     }
 
@@ -49,7 +49,7 @@ export async function apiFetch(
 
     return null;
   } catch (err) {
-    console.error("🚨 Fetch error:", err);
+    console.error("Fetch error:", err);
     throw err;
   }
 }
