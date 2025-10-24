@@ -18,7 +18,7 @@ import { Input } from "../../components/ui/Input"
 import { Label } from "../../components/ui/Label"
 import { Separator } from "../../components/ui/Separator"
 import { AuthApi } from "../../services/authApi"
-import { fetchCountries, fetchLanguages } from "../../services/locationApi"
+import { locationService } from "../../services/LocationApi"
 
 export default function RegisterScreen() {
   const router = useRouter()
@@ -43,7 +43,7 @@ export default function RegisterScreen() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [cList, lList] = await Promise.all([fetchCountries(), fetchLanguages()])
+        const [cList, lList] = await Promise.all([locationService.fetchCountries(), locationService.fetchLanguages()])
         setCountries(cList.map((c, i) => ({ key: i, label: c })))
         setLanguages(lList.map((l, i) => ({ key: i, label: l })))
       } catch {

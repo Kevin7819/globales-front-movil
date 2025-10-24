@@ -14,7 +14,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { AiApi } from "../../services/aiApi";
+import { AiApi } from "../../services/AiApi";
 
 type Msg = {
   id: string;

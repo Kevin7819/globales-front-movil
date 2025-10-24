@@ -21,6 +21,7 @@ export interface User {
 // Trip types
 export interface Trip {
   tripId: number;
+  origin: string;
   destination: string;
   departureDate: string;
   returnDate: string;

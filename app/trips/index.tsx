@@ -234,7 +234,7 @@ export default function TripsScreen() {
 
             <View style={styles.welcomeSection}>
               <Text style={styles.welcomeText}>Gestiona tus viajes</Text>
-              <Text style={styles.userName}>con Orbis Airlines</Text>
+              <Text style={styles.userName}>con Orbis</Text>
             </View>
           </View>
         </ImageBackground>
@@ -386,7 +386,7 @@ export default function TripsScreen() {
                           <Ionicons name="location" size={20} color="#05A6A6" />
                         </View>
                         <View>
-                          <Text style={styles.destinationText}>{trip.destination}</Text>
+                          <Text style={styles.destinationText}>{trip.origin}, {trip.destination}</Text>
                           <View style={[styles.typeBadge, { backgroundColor: typeColors.bg }]}>
                             <Text style={[styles.badgeText, { color: typeColors.text }]}>
                               {capitalizeFirstLetter(trip.type)}
@@ -463,6 +463,22 @@ export default function TripsScreen() {
             <ScrollView style={styles.modalBody}>
               <View style={styles.modalSection}>
                 <Text style={styles.modalSectionTitle}>Información del Vuelo</Text>
+
+                <View style={styles.modalRow}>
+                  <View style={styles.modalLabelContainer}>
+                    <Ionicons name="airplane-outline" size={16} color="#64748B" />
+                    <Text style={styles.modalLabel}>Origen</Text>
+                  </View>
+                  <Text style={styles.reservationCodeModal}>{selectedTrip?.origin}</Text>
+                </View>
+
+                <View style={styles.modalRow}>
+                  <View style={styles.modalLabelContainer}>
+                    <Ionicons name="location-outline" size={16} color="#64748B" />
+                    <Text style={styles.modalLabel}>Destino</Text>
+                  </View>
+                  <Text style={styles.reservationCodeModal}>{selectedTrip?.destination}</Text>
+                </View>
                 
                 <View style={styles.modalRow}>
                   <View style={styles.modalLabelContainer}>
