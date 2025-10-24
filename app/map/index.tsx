@@ -18,7 +18,7 @@ import {
   View,
 } from "react-native";
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { locationService } from "../../services/locationApi";
+import { locationService } from "../../services/LocationApi";
 import { mapDataService } from "../../services/mapDataApi";
 import { tripService } from "../../services/TripApi";
 import { MapData, Trip } from "../../types";
@@ -566,7 +566,6 @@ export default function MapScreen() {
   );
 }
 
-// Los estilos se mantienen igual...
 const styles = StyleSheet.create({
   container: { 
     flex: 1,
