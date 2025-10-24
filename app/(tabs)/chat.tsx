@@ -1,3 +1,6 @@
+import { Feather, Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -11,10 +14,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Feather, Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
-import { AiApi } from "../../services/AiApi";
+import { AiApi } from "../../services/aiApi";
 
 type Msg = {
   id: string;
@@ -170,7 +170,7 @@ export default function ChatScreen() {
         <View style={styles.actions}>
           <TouchableOpacity
             onPress={() => setLang((p) => (p === "es" ? "en" : "es"))}
-            style={[styles.langBtn, Platform.OS === "web" && { cursor: "pointer" }]}
+            style={[styles.langBtn, Platform.OS === "web" && styles.webCursorPointer]}
           >
             <Feather name="globe" size={16} color="#2563EB" />
             <Text style={styles.langText}>{lang.toUpperCase()}</Text>
@@ -178,7 +178,7 @@ export default function ChatScreen() {
 
           <TouchableOpacity
             onPress={clearHistory}
-            style={[styles.clearBtn, Platform.OS === "web" && { cursor: "pointer" }]}
+            style={[styles.clearBtn, Platform.OS === "web" && styles.webCursorPointer]}
           >
             <Feather name="trash-2" size={16} color="#DC2626" />
           </TouchableOpacity>
@@ -202,7 +202,7 @@ export default function ChatScreen() {
           onChangeText={setInput}
           style={[
             styles.input,
-            Platform.OS === "web" && { outlineWidth: 0, cursor: "text" },
+            Platform.OS === "web" && styles.webInput,
           ]}
           multiline
           maxLength={2000}
@@ -213,7 +213,7 @@ export default function ChatScreen() {
           style={[
             styles.sendBtn,
             (!input.trim() || loading) && styles.sendBtnDisabled,
-            Platform.OS === "web" && { cursor: "pointer" },
+            Platform.OS === "web" && styles.webCursorPointer,
           ]}
         >
           {loading ? (
@@ -241,13 +241,23 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#E5E7EB",
     backgroundColor: "#fff",
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
+    boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.05)",
+    elevation: 1,
   },
-  headerLeft: { flexDirection: "row", alignItems: "center", gap: 8 },
-  headerTitle: { fontSize: 18, fontWeight: "700", color: "#111827" },
-  actions: { flexDirection: "row", gap: 10 },
+  headerLeft: { 
+    flexDirection: "row", 
+    alignItems: "center", 
+    gap: 8 
+  },
+  headerTitle: { 
+    fontSize: 18, 
+    fontWeight: "700", 
+    color: "#111827" 
+  },
+  actions: { 
+    flexDirection: "row", 
+    gap: 10 
+  },
   langBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -259,7 +269,10 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     backgroundColor: "#fff",
   },
-  langText: { color: "#2563EB", fontWeight: "600" },
+  langText: { 
+    color: "#2563EB", 
+    fontWeight: "600" 
+  },
   clearBtn: {
     borderWidth: 1,
     borderColor: "#DC2626",
@@ -267,36 +280,57 @@ const styles = StyleSheet.create({
     padding: 6,
     backgroundColor: "#fff",
   },
-  listContent: { padding: 12, paddingBottom: 80 },
-  row: { width: "100%", marginVertical: 4, flexDirection: "row" },
-  left: { justifyContent: "flex-start" },
-  right: { justifyContent: "flex-end" },
+  listContent: { 
+    padding: 12, 
+    paddingBottom: 80 
+  },
+  row: { 
+    width: "100%", 
+    marginVertical: 4, 
+    flexDirection: "row" 
+  },
+  left: { 
+    justifyContent: "flex-start" 
+  },
+  right: { 
+    justifyContent: "flex-end" 
+  },
   bubble: {
     maxWidth: "85%",
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
+    boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1)",
     elevation: 1,
   },
-  bubbleUser: { backgroundColor: "#2563EB" },
+  bubbleUser: { 
+    backgroundColor: "#2563EB" 
+  },
   bubbleAssistant: {
     backgroundColor: "#fff",
     borderWidth: 1,
     borderColor: "#E5E7EB",
   },
-  bubbleSystem: { backgroundColor: "#E0E7FF" },
+  bubbleSystem: { 
+    backgroundColor: "#E0E7FF" 
+  },
   bubbleError: {
     backgroundColor: "#FEE2E2",
     borderWidth: 1,
     borderColor: "#FCA5A5",
   },
-  text: { fontSize: 14 },
-  textUser: { color: "#fff" },
-  textAssistant: { color: "#111827" },
-  textError: { color: "#991B1B" },
+  text: { 
+    fontSize: 14 
+  },
+  textUser: { 
+    color: "#fff" 
+  },
+  textAssistant: { 
+    color: "#111827" 
+  },
+  textError: { 
+    color: "#991B1B" 
+  },
   inputBar: {
     position: "absolute",
     bottom: 8,
@@ -310,9 +344,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#CBD5E1",
     padding: 8,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    boxShadow: "0 1px 4px 0 rgba(0, 0, 0, 0.05)",
+    elevation: 2, 
   },
   input: {
     flex: 1,
@@ -330,5 +363,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  sendBtnDisabled: { opacity: 0.6 },
+  sendBtnDisabled: { 
+    opacity: 0.6 
+  },
+  webCursorPointer: {
+    cursor: "pointer",
+  },
+  webInput: {
+    outlineWidth: 0,
+    cursor: "text",
+  },
 });

@@ -18,9 +18,10 @@ import {
   View,
 } from "react-native";
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { getCountryBorders } from "../../services/location";
-import { getMapDataCultura, getMapDataSalud, getMapDataSeguridad } from "../../services/MapService";
-import { Trip, tripService } from "../../services/TripApi";
+import { locationService } from "../../services/locationApi";
+import { mapDataService } from "../../services/mapDataApi";
+import { tripService } from "../../services/TripApi";
+import { MapData, Trip } from "../../types";
 
 MapboxGL.setAccessToken(Constants.expoConfig?.extra?.mapboxAccessToken ?? "");
 
@@ -83,7 +84,7 @@ export default function MapScreen() {
     }
   };
 
-  // Función mejorada para obtener el código de país
+  // Función simplificada para obtener el código de país
   const getCurrentCountryCode = (): string => {
     if (!nearestTrip) {
       console.log("No hay viaje, usando código por defecto: CRI");
@@ -95,48 +96,12 @@ export default function MapScreen() {
     // Verificar si el código de país es válido (no vacío y tiene al menos 2 caracteres)
     if (!countryCode || countryCode.length < 2) {
       console.warn("Código de país inválido o vacío en el viaje:", nearestTrip.countryCode);
-      
-      // Intentar extraer código de país del destino
-      const extractedCode = extractCountryCodeFromDestination(nearestTrip.destination);
-      if (extractedCode) {
-        console.log("Código extraído del destino:", extractedCode);
-        return extractedCode;
-      }
-      
       console.log("Usando código por defecto: CRI");
       return "CRI";
     }
 
     console.log("Usando código de país del viaje:", countryCode);
     return countryCode;
-  };
-
-  // Función para extraer código de país del destino
-  const extractCountryCodeFromDestination = (destination: string): string | null => {
-    if (!destination) return null;
-
-    const countryMappings: { [key: string]: string } = {
-      'méxico': 'MX', 'mexico': 'MX',
-      'estados unidos': 'US', 'united states': 'US', 'usa': 'US',
-      'españa': 'ES', 'spain': 'ES',
-      'francia': 'FR', 'france': 'FR',
-      'costa rica': 'CRI', 'costa rica': 'CRI',
-      'colombia': 'CO', 'colombia': 'CO',
-      'argentina': 'AR', 'argentina': 'AR',
-      'brasil': 'BR', 'brazil': 'BR',
-      'chile': 'CL', 'chile': 'CL',
-      'perú': 'PE', 'peru': 'PE',
-    };
-
-    const lowerDestination = destination.toLowerCase();
-    
-    for (const [countryName, code] of Object.entries(countryMappings)) {
-      if (lowerDestination.includes(countryName)) {
-        return code;
-      }
-    }
-
-    return null;
   };
 
   useEffect(() => {
@@ -150,22 +115,22 @@ export default function MapScreen() {
       console.log(`[${loadId}] Cargando datos desde: ${dataSource}, categoría: ${selectedCategory}, país: ${countryCode}`);
 
       try {
-        let mapData;
+        let mapData: MapData | null = null;
 
         if (dataSource === 'borders') {
           hasLoadedGeoJson.current = true;
-          mapData = await getCountryBorders(countryCode);
+          mapData = await locationService.getCountryBorders(countryCode);
           console.log(`[${loadId}] Fronteras cargadas para ${countryCode}:`, mapData ? "GeoJSON válido" : "Sin datos");
         } else {
           switch (selectedCategory) {
             case 'salud':
-              mapData = await getMapDataSalud(countryCode);
+              mapData = await mapDataService.getMapDataSalud(countryCode);
               break;
             case 'seguridad':
-              mapData = await getMapDataSeguridad(countryCode);
+              mapData = await  mapDataService.getMapDataSeguridad(countryCode);
               break;
             case 'cultura':
-              mapData = await getMapDataCultura(countryCode); 
+              mapData = await  mapDataService.getMapDataCultura(countryCode); 
               break;
           }
           console.log(`[${loadId}] AI ${selectedCategory} cargado para ${countryCode}:`, mapData ? "Datos recibidos" : "Sin datos");
@@ -183,13 +148,27 @@ export default function MapScreen() {
           processedGeoJson = mapData;
         } else if (mapData?.GeoJson?.type === "FeatureCollection") {
           processedGeoJson = mapData.GeoJson;
+        } else if (mapData?.geoJson?.type === "FeatureCollection") {
+          processedGeoJson = mapData.geoJson;
         } else if (mapData?.features) {
           processedGeoJson = { type: "FeatureCollection", features: mapData.features };
+        } else if (mapData?.locations) {
+          processedGeoJson = {
+            type: "FeatureCollection",
+            features: mapData.locations.map((location: any) => ({
+              type: "Feature",
+              geometry: {
+                type: "Point",
+                coordinates: [location.longitude, location.latitude]
+              },
+              properties: location
+            }))
+          };
         }
 
         if (processedGeoJson) {
           setGeoJson(processedGeoJson);
-          console.log(`[${loadId}] 🗺️ ${dataSource.toUpperCase()} data establecida (${processedGeoJson.features?.length || 0} features)`);
+          console.log(`[${loadId}] ${dataSource.toUpperCase()} data establecida (${processedGeoJson.features?.length || 0} features)`);
         } else {
           console.warn(`[${loadId}] Formato inesperado:`, mapData);
           setGeoJson(null);
@@ -660,11 +639,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 10,
     backgroundColor: "#2563EB",
-    shadowColor: "#000",
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 5,
+    boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1)",
+    elevation: 2,
   },
   bordersModeButton: {
     backgroundColor: "#2563EB",
@@ -686,11 +662,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 20,
     marginHorizontal: 4,
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    shadowOffset: { width: 0, height: 1 },
-    elevation: 3,
+    boxShadow: "0 2px 5px 0 rgba(0, 0, 0, 0.3)",
+    elevation: 5,
     flex: 1,
     alignItems: "center",
   },
@@ -715,11 +688,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 8,
     marginBottom: 5,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    shadowOffset: { width: 0, height: 1 },
-    elevation: 2,
+    boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.2)",
+    elevation: 3,
   },
   infoText: {
     fontSize: 14,

@@ -1,19 +1,15 @@
-// services/AiApi.ts
-import apiFetch from "./api";
-
-export type AiAnswer = { answer?: string } | string;
+import { AiAnswer } from '../types';
+import apiFetch from './api';
 
 export const AiApi = {
   async ask(question: string, lang: string = "es"): Promise<string> {
-    // GET con query params y requireAuth=true para que meta el Bearer token
     const res: AiAnswer = await apiFetch(
       `/ai/ask?question=${encodeURIComponent(question)}&lang=${encodeURIComponent(lang)}`,
-      { method: "GET" },
+      { method: 'GET' },
       true
     );
 
-    // El backend devuelve { answer: string } — por si acaso, toleramos string directo
-    if (typeof res === "string") return res;
-    return res?.answer ?? "";
+    if (typeof res === 'string') return res;
+    return res?.answer ?? '';
   },
 };
