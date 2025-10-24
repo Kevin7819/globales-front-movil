@@ -8,9 +8,12 @@
     "scheme": "globalesfrontmovil",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.globalesfrontmovil"
     },
+
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -21,13 +24,17 @@
       "package": "com.anonymous.globalesfrontmovil",
       "permissions": [
         "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION"
-      ]
+        "ACCESS_COARSE_LOCATION",
+        "POST_NOTIFICATIONS"
+      ],
+      "useNextNotificationsApi": true
     },
+
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
+
     "plugins": [
       "expo-router",
       "expo-location",
@@ -39,11 +46,21 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/android-icon-foreground.png",
+          "color": "#169c81",
+          "mode": "production"
+        }
       ]
     ],
+
     "experiments": {
       "typedRoutes": true
     },
+
     "extra": {
       "mapboxAccessToken": "pk.eyJ1Ijoia2V2aW43ODE5IiwiYSI6ImNtZzc4amZudTBmYTgybG9oeXEwYTdzeTYifQ.qKzzE82WbE0Xnwa0KBw0Yw"
     }

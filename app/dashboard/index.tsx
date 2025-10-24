@@ -19,6 +19,7 @@ import { Avatar } from "../../components/ui/Avatar";
 import { Card } from "../../components/ui/Card";
 import { tripService } from "../../services/TripApi";
 import { userService } from "../../services/UserApi";
+import apiFetch from "../../services/api";
 
 const { width } = Dimensions.get("window");
 
@@ -88,6 +89,24 @@ export default function DashboardScreen() {
     router.push("/trips");
   };
 
+  // Acción para enviar notificación de prueba (usa token internamente)
+  const handleSendTestPush = async () => {
+    try {
+      await apiFetch(
+        "/notifications/send-test",
+        {
+          method: "POST",
+          body: JSON.stringify({ message: "Hola desde Orbis 👋", data: { screen: "dashboard" } }),
+        },
+        true // requireAuth -> agrega Authorization si hay token
+      );
+      Alert.alert("Notificación", "Notificación de prueba enviada ✉️");
+    } catch (e: any) {
+      console.error("Error enviando notificación:", e);
+      Alert.alert("Error", e?.message || "No se pudo enviar la notificación.");
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES', {
@@ -154,6 +173,12 @@ export default function DashboardScreen() {
             <Text style={styles.welcomeSubtitle}>
               Tu próxima aventura te espera
             </Text>
+            {/* Botón de prueba de notificación */}
+            <View style={{ marginTop: 12 }}>
+              <TouchableOpacity style={styles.smallButton} onPress={handleSendTestPush}>
+                <Text style={styles.smallButtonText}>Probar notificación push</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </ImageBackground>
@@ -194,7 +219,7 @@ export default function DashboardScreen() {
 
           <TouchableOpacity 
             style={styles.actionCard}
-            onPress={() => router.push("/profile")}
+            onPress={() => router.push("/")}
           >
             <View style={[styles.actionIcon, { backgroundColor: '#F59E0B' }]}>
               <Ionicons name="person" size={24} color="#FFFFFF" />
@@ -502,6 +527,18 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#374151",
     textAlign: "center",
+  },
+  smallButton: {
+    backgroundColor: "#05A6A6",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  smallButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "700",
   },
   section: {
     paddingHorizontal: 20,
