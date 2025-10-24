@@ -69,8 +69,22 @@ export function usePushNotifications() {
 }
 
 async function registerForPushNotificationsAsync(): Promise<string | null> {
+  // En web, Expo Notifications requiere que definas `notification.vapidPublicKey` en app.json.
+  // Si no está definida, evitamos llamar al método que provoca el error y devolvemos null.
+  if (Platform.OS === 'web') {
+    // Constants puede exponer expoConfig o manifest dependiendo del entorno
+    const expoConf: any = (Constants as any)?.expoConfig || (Constants as any)?.manifest;
+    const vapid = expoConf?.notification?.vapidPublicKey;
+    if (!vapid) {
+      console.warn(
+        'Push web: no se encontró notification.vapidPublicKey en app.json. Se omitirá el registro de push en web.'
+      );
+      return null;
+    }
+  }
+
   if (!Device.isDevice) {
-    console.warn('Push no disponible en simulador web/desktop.');
+    console.warn('Push no disponible en simulador/dispositivo virtual. Usa un dispositivo físico para probar.');
     return null;
   }
 

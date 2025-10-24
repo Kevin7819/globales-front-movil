@@ -162,7 +162,6 @@ export default function DashboardScreen() {
                 src={user?.avatar || ""}
                 fallback={user?.name?.[0]?.toUpperCase() || "?"}
                 size={42}
-                style={styles.avatar}
               />
             </TouchableOpacity>
           </View>
@@ -173,12 +172,7 @@ export default function DashboardScreen() {
             <Text style={styles.welcomeSubtitle}>
               Tu próxima aventura te espera
             </Text>
-            {/* Botón de prueba de notificación */}
-            <View style={{ marginTop: 12 }}>
-              <TouchableOpacity style={styles.smallButton} onPress={handleSendTestPush}>
-                <Text style={styles.smallButtonText}>Probar notificación push</Text>
-              </TouchableOpacity>
-            </View>
+            {/* botón movido a Acciones Rápidas para mayor visibilidad en web */}
           </View>
         </View>
       </ImageBackground>
@@ -195,6 +189,36 @@ export default function DashboardScreen() {
               <Ionicons name="map" size={24} color="#FFFFFF" />
             </View>
             <Text style={styles.actionText}>Mapa</Text>
+          </TouchableOpacity>
+
+          {/* Acción: Probar notificación */}
+          <TouchableOpacity
+            style={styles.actionCard}
+            onPress={handleSendTestPush}
+          >
+            {Platform.OS === 'web' ? (
+              // @ts-ignore
+              <button
+                onClick={() => handleSendTestPush()}
+                style={{
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                <View style={[styles.actionIcon, { backgroundColor: '#05A6A6' }]}>
+                  <Ionicons name="notifications" size={22} color="#FFFFFF" />
+                </View>
+                <Text style={styles.actionText}>Notificaciones</Text>
+              </button>
+            ) : (
+              <>
+                <View style={[styles.actionIcon, { backgroundColor: '#05A6A6' }]}>
+                  <Ionicons name="notifications" size={22} color="#FFFFFF" />
+                </View>
+                <Text style={styles.actionText}>Notificaciones</Text>
+              </>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity 
@@ -318,7 +342,7 @@ export default function DashboardScreen() {
               src={user?.avatar || ""}
               fallback={user?.name?.[0]?.toUpperCase() || "?"}
               size={60}
-              style={styles.travelerAvatar}
+              
             />
             <View style={styles.travelerDetails}>
               <Text style={styles.travelerName}>{user?.name}</Text>
