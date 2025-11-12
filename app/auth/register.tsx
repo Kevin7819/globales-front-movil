@@ -17,7 +17,7 @@ import { Card } from "../../components/ui/Card"
 import { Input } from "../../components/ui/Input"
 import { Label } from "../../components/ui/Label"
 import { Separator } from "../../components/ui/Separator"
-import { AuthApi } from "../../services/authApi"
+import { AuthApi } from "../../services/AuthApi"
 import { locationService } from "../../services/LocationApi"
 
 export default function RegisterScreen() {
