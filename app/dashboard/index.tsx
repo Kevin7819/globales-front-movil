@@ -102,7 +102,7 @@ export default function DashboardScreen() {
     const departure = new Date(departureDate);
     const diffTime = departure.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays < 0) return { text: "Completado", color: "#10B981" };
     if (diffDays === 0) return { text: "Hoy", color: "#023859" };
     if (diffDays === 1) return { text: "Mañana", color: "#03A696" };
@@ -162,7 +162,7 @@ export default function DashboardScreen() {
       <View style={styles.quickActions}>
         <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
         <View style={styles.actionsGrid}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.actionCard}
             onPress={() => router.push("/map")}
           >
@@ -172,7 +172,7 @@ export default function DashboardScreen() {
             <Text style={styles.actionText}>Mapa</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.actionCard}
             onPress={() => router.push({ pathname: "/(tabs)/chat", params: { name: user?.name } })}
           >
@@ -182,7 +182,7 @@ export default function DashboardScreen() {
             <Text style={styles.actionText}>Asistente</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.actionCard}
             onPress={handleAddTrip}
           >
@@ -192,9 +192,9 @@ export default function DashboardScreen() {
             <Text style={styles.actionText}>Nuevo Viaje</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.actionCard}
-            onPress={() => router.push("/profile")}
+            onPress={() => router.push("/dashboard/edit-profile")}
           >
             <View style={[styles.actionIcon, { backgroundColor: '#F59E0B' }]}>
               <Ionicons name="person" size={24} color="#FFFFFF" />
@@ -208,7 +208,7 @@ export default function DashboardScreen() {
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Próximos Viajes</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.seeAllButton}
             onPress={handleAddTrip}
           >
@@ -225,7 +225,7 @@ export default function DashboardScreen() {
               <Text style={styles.emptyMessage}>
                 Comienza a planificar tu próxima aventura con Orbis Airlines
               </Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.primaryButton}
                 onPress={handleAddTrip}
               >
@@ -235,8 +235,8 @@ export default function DashboardScreen() {
             </View>
           </Card>
         ) : (
-          <ScrollView 
-            horizontal 
+          <ScrollView
+            horizontal
             showsHorizontalScrollIndicator={false}
             style={styles.tripsScroll}
             contentContainerStyle={styles.tripsContainer}
@@ -256,13 +256,13 @@ export default function DashboardScreen() {
                       <Text style={styles.statusText}>{tripStatus.text}</Text>
                     </View>
                   </View>
-                  
+
                   <View style={styles.tripDetails}>
                     <View style={styles.dateSection}>
                       <Ionicons name="calendar" size={16} color="#64748B" />
                       <Text style={styles.dateText}>{formatDate(trip.departureDate)}</Text>
                     </View>
-                    
+
                     <View style={styles.reservationSection}>
                       <Text style={styles.reservationLabel}>Código de Reserva</Text>
                       <Text style={styles.reservationCode}>{trip.reservationCode}</Text>
@@ -286,7 +286,7 @@ export default function DashboardScreen() {
           <Ionicons name="ribbon" size={24} color="#05A6A6" />
           <Text style={styles.travelerTitle}>Tu Perfil de Viajero</Text>
         </View>
-        
+
         <View style={styles.travelerContent}>
           <View style={styles.travelerInfo}>
             <Avatar
@@ -323,6 +323,15 @@ export default function DashboardScreen() {
               <Text style={styles.metaText}>{user?.preferredLanguage || "No especificado"}</Text>
             </View>
           </View>
+
+          <TouchableOpacity
+            style={styles.editProfileButton}
+            onPress={() => router.push("/dashboard/edit-profile")}
+          >
+            <Ionicons name="create-outline" size={18} color="#FFFFFF" />
+            <Text style={styles.editProfileText}>Editar perfil</Text>
+          </TouchableOpacity>
+
         </View>
       </Card>
 
@@ -365,12 +374,12 @@ export default function DashboardScreen() {
 
         </View>
 
-        <Text style={{ 
-          fontSize: 12, 
-          color: '#64748B', 
-          textAlign: 'center', 
-          marginTop: 12, 
-          fontStyle: 'italic' 
+        <Text style={{
+          fontSize: 12,
+          color: '#64748B',
+          textAlign: 'center',
+          marginTop: 12,
+          fontStyle: 'italic'
         }}>
           Algunas funciones como las guías estarán disponibles más adelante.
         </Text>
@@ -753,6 +762,26 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#374151",
     textAlign: "center",
+  },
+  editProfileButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#05A6A6",
+    borderRadius: 10,
+    paddingVertical: 10,
+    marginTop: 12,
+    gap: 6,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  editProfileText: {
+    color: "#FFFFFF",
+    fontWeight: "600",
+    fontSize: 14,
   },
   footer: {
     padding: 20,
