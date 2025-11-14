@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
     ActivityIndicator,
     Platform,
@@ -9,7 +9,6 @@ import {
     Text,
     TouchableOpacity,
     View,
-    Alert,
 } from "react-native";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import ModalSelector from "react-native-modal-selector";
@@ -18,19 +17,26 @@ import { Card } from "../../components/ui/Card";
 import { Input } from "../../components/ui/Input";
 import { Label } from "../../components/ui/Label";
 import { Separator } from "../../components/ui/Separator";
-import { userService } from "../../services/UserApi";
 import { locationService } from "../../services/LocationApi";
+import { userService } from "../../services/UserApi";
 
 export default function EditProfileScreen() {
     const router = useRouter();
+
+    // 👇 Agregado: ref para el date input de web
+    const webDateRef = useRef<any>(null);
 
     const [countries, setCountries] = useState<{ key: number; label: string }[]>([]);
     const [languages, setLanguages] = useState<{ key: number; label: string }[]>([]);
     const [loadingData, setLoadingData] = useState(true);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
     const [showDatePicker, setShowDatePicker] = useState(false);
-    const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
+    const [toast, setToast] = useState<{
+        type: "success" | "error";
+        message: string;
+    } | null>(null);
 
     const [form, setForm] = useState({
         id: 0,
@@ -50,7 +56,9 @@ export default function EditProfileScreen() {
                     locationService.fetchLanguages(),
                 ]);
 
-                setCountries(cList.map((c, i) => ({ key: i, label: c.name || c })));
+                setCountries(
+                    cList.map((c, i) => ({ key: i, label: (c as any).name ? (c as any).name : String(c) }))
+                );
                 setLanguages(lList.map((l, i) => ({ key: i, label: l })));
 
                 setForm({
@@ -59,7 +67,7 @@ export default function EditProfileScreen() {
                     email: user.email || "",
                     countryOfOrigin: user.countryOfOrigin || "",
                     preferredLanguage: user.preferredLanguage || "",
-                    birthDate: user.birthDate?.split("T")[0] || "",
+                    birthDate: (user as any).birthDate?.split("T")[0] || "",
                 });
             } catch (err) {
                 console.error(err);
@@ -72,7 +80,11 @@ export default function EditProfileScreen() {
         loadData();
     }, []);
 
-    const showToast = (type: "success" | "error", message: string, redirect?: boolean) => {
+    const showToast = (
+        type: "success" | "error",
+        message: string,
+        redirect?: boolean
+    ) => {
         setToast({ type, message });
         setTimeout(() => {
             setToast(null);
@@ -100,9 +112,11 @@ export default function EditProfileScreen() {
                 countryOfOrigin: form.countryOfOrigin,
                 preferredLanguage: form.preferredLanguage,
                 birthDate: form.birthDate,
-            });
-            showToast("success", "Perfil actualizado correctamente ✅");
+            } as any);
+            // Mostrar overlay bonito de éxito y luego redirigir
+            setShowSuccess(true);
             setTimeout(() => {
+                setShowSuccess(false);
                 router.replace("/dashboard");
             }, 1500);
         } catch (err) {
@@ -113,12 +127,11 @@ export default function EditProfileScreen() {
         }
     };
 
-
     if (loading) {
         return (
             <View style={styles.centered}>
-                <ActivityIndicator size="large" color="#2563EB" />
-                <Text style={{ color: "#6B7280", marginTop: 8 }}>Cargando perfil...</Text>
+                <ActivityIndicator size="large" color="#6366F1" />
+                <Text style={{ color: "#CBD5E1", marginTop: 8 }}>Cargando perfil...</Text>
             </View>
         );
     }
@@ -127,54 +140,83 @@ export default function EditProfileScreen() {
         <ScrollView contentContainerStyle={styles.container}>
             <TouchableOpacity onPress={() => router.back()}>
                 <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
-                    <Feather name="arrow-left" size={18} color="#2563EB" />
+                    <Feather name="arrow-left" size={18} color="#A5B4FC" />
                     <Text style={styles.link}> Volver</Text>
                 </View>
             </TouchableOpacity>
 
-            <Card>
+            <Card style={styles.card}>
                 <View style={styles.cardHeader}>
                     <Text style={styles.cardTitle}>Editar Perfil</Text>
                     <Text style={styles.cardDesc}>Actualiza tus datos personales</Text>
                 </View>
 
                 {/* Nombre */}
-                <Label>Nombre</Label>
-                <Input value={form.name} onChangeText={(t) => handleChange("name", t)} placeholder="Tu nombre" />
+                <Label style={styles.label}>Nombre</Label>
+                <Input
+                    value={form.name}
+                    onChangeText={(t) => handleChange("name", t)}
+                    placeholder="Tu nombre"
+                    style={styles.input}
+                />
 
                 {/* Email */}
-                <Label>Correo electrónico</Label>
-                <Input value={form.email} editable={false} placeholder="Tu correo" />
+                <Label style={styles.label}>Correo electrónico</Label>
+                <Input value={form.email} editable={false} placeholder="Tu correo" style={styles.inputDisabled} />
 
-                {/* Fecha nacimiento */}
-                <Label>Fecha de nacimiento</Label>
+                {/* Fecha de nacimiento */}
+                <Label style={styles.label}>Fecha de nacimiento</Label>
+
                 {Platform.OS === "web" ? (
-                    <View style={styles.dateInputUnified}>
-                        {/* @ts-ignore */}
+                    <View style={styles.dateWebWrapper}>
                         <input
+                            ref={webDateRef}
                             type="date"
                             value={form.birthDate}
                             onChange={(e) => handleChange("birthDate", e.target.value)}
                             max={new Date().toISOString().split("T")[0]}
-                            style={{
-                                flex: 1,
-                                color: "#111827",
-                                fontSize: 14,
-                                border: "none",
-                                background: "transparent",
-                                height: 40,
-                                outline: "none",
-                                fontFamily: "inherit",
-                            }}
+                            style={styles.hiddenWebDateInput}
                         />
-                        <Feather name="calendar" size={20} color="#2563EB" style={styles.dateIconUnified} />
+
+                        <TouchableOpacity
+                            onPress={() => {
+                                if (webDateRef.current) {
+                                    if (webDateRef.current.showPicker) {
+                                        webDateRef.current.showPicker();
+                                    } else {
+                                        webDateRef.current.click();
+                                    }
+                                }
+                            }}
+                            style={styles.dateWebDisplay}
+                        >
+                            <Text
+                                style={[
+                                    styles.dateText,
+                                    { color: form.birthDate ? "#E0E7FF" : "#94A3B8" },
+                                ]}
+                            >
+                                {form.birthDate || "Selecciona tu fecha"}
+                            </Text>
+
+                            <Feather name="calendar" size={20} color="#A5B4FC" />
+                        </TouchableOpacity>
                     </View>
                 ) : (
-                    <TouchableOpacity style={styles.dateInputUnified} onPress={() => setShowDatePicker(true)}>
-                        <Text style={[styles.dateText, { color: form.birthDate ? "#111827" : "#9CA3AF" }]}>
+                    <TouchableOpacity
+                        style={styles.dateWebDisplay}
+                        onPress={() => setShowDatePicker(true)}
+                    >
+                        <Text
+                            style={[
+                                styles.dateText,
+                                { color: form.birthDate ? "#E0E7FF" : "#94A3B8" },
+                            ]}
+                        >
                             {form.birthDate || "Selecciona tu fecha"}
                         </Text>
-                        <Feather name="calendar" size={20} color="#2563EB" style={styles.dateIconUnified} />
+                        <Feather name="calendar" size={20} color="#A5B4FC" />
+
                         <DateTimePickerModal
                             isVisible={showDatePicker}
                             mode="date"
@@ -186,9 +228,9 @@ export default function EditProfileScreen() {
                 )}
 
                 {/* País */}
-                <Label>País de origen</Label>
+                <Label style={styles.label}>País de origen</Label>
                 {loadingData ? (
-                    <ActivityIndicator color="#2563EB" style={{ marginVertical: 10 }} />
+                    <ActivityIndicator color="#A5B4FC" style={{ marginVertical: 10 }} />
                 ) : (
                     <ModalSelector
                         data={countries}
@@ -201,7 +243,7 @@ export default function EditProfileScreen() {
                         cancelText="Cancelar"
                     >
                         <View style={styles.selectInner}>
-                            <Feather name="map-pin" size={18} color="#2563EB" style={styles.icon} />
+                            <Feather name="map-pin" size={18} color="#A5B4FC" style={styles.icon} />
                             <Text style={styles.selectorText}>
                                 {form.countryOfOrigin || "Selecciona tu país"}
                             </Text>
@@ -210,9 +252,9 @@ export default function EditProfileScreen() {
                 )}
 
                 {/* Idioma */}
-                <Label>Idioma preferido</Label>
+                <Label style={styles.label}>Idioma preferido</Label>
                 {loadingData ? (
-                    <ActivityIndicator color="#2563EB" style={{ marginVertical: 10 }} />
+                    <ActivityIndicator color="#A5B4FC" style={{ marginVertical: 10 }} />
                 ) : (
                     <ModalSelector
                         data={languages}
@@ -225,7 +267,7 @@ export default function EditProfileScreen() {
                         cancelText="Cancelar"
                     >
                         <View style={styles.selectInner}>
-                            <Feather name="globe" size={18} color="#2563EB" style={styles.icon} />
+                            <Feather name="globe" size={18} color="#A5B4FC" style={styles.icon} />
                             <Text style={styles.selectorText}>
                                 {form.preferredLanguage || "Selecciona tu idioma"}
                             </Text>
@@ -234,7 +276,7 @@ export default function EditProfileScreen() {
                 )}
 
                 {saving ? (
-                    <ActivityIndicator size="large" color="#2563EB" style={{ marginTop: 12 }} />
+                    <ActivityIndicator size="large" color="#A5B4FC" style={{ marginTop: 12 }} />
                 ) : (
                     <Button title="Guardar cambios" onPress={handleSave} style={{ marginTop: 12 }} />
                 )}
@@ -246,10 +288,21 @@ export default function EditProfileScreen() {
                 <View
                     style={[
                         styles.toast,
-                        toast.type === "success" ? styles.toastSuccess : styles.toastError,
+                        toast.type === "success"
+                            ? styles.toastSuccess
+                            : styles.toastError,
                     ]}
                 >
                     <Text style={styles.toastText}>{toast.message}</Text>
+                </View>
+            )}
+
+            {showSuccess && (
+                <View style={styles.successOverlay} pointerEvents="box-none">
+                    <View style={styles.successBox}>
+                        <Feather name="check" size={36} color="#fff" />
+                        <Text style={styles.successText}>Perfil actualizado correctamente</Text>
+                    </View>
                 </View>
             )}
         </ScrollView>
@@ -257,44 +310,108 @@ export default function EditProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: { flexGrow: 1, padding: 20, backgroundColor: "#EEF2FF" },
-    link: { color: "#2563EB", fontWeight: "600" },
+    container: {
+        flexGrow: 1,
+        padding: 20,
+        backgroundColor: "#0F0F2F",
+    },
+
+    link: {
+        color: "#A5B4FC",
+        fontWeight: "600",
+    },
+
+    card: {
+        backgroundColor: "rgba(255,255,255,0.05)",
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.1)",
+        borderRadius: 18,
+        padding: 20,
+        shadowColor: "#6366F1",
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 6 },
+    },
+
     cardHeader: { marginBottom: 16 },
-    cardTitle: { fontSize: 18, fontWeight: "bold", color: "#111827" },
-    cardDesc: { fontSize: 14, color: "#6B7280" },
-    dateInputUnified: {
-        flexDirection: "row",
-        alignItems: "center",
-        borderWidth: 1.5,
-        borderColor: "#2563EB",
-        borderRadius: 10,
-        backgroundColor: "#fff",
+
+    cardTitle: { fontSize: 20, fontWeight: "bold", color: "#E0E7FF" },
+
+    cardDesc: { fontSize: 14, color: "#94A3B8" },
+
+    label: { color: "#CBD5E1" },
+
+    input: {
+        backgroundColor: "rgba(255,255,255,0.08)",
+        color: "#E0E7FF",
+    },
+
+    inputDisabled: {
+        backgroundColor: "rgba(255,255,255,0.05)",
+        color: "#94A3B8",
+    },
+
+    dateWebWrapper: {
         marginTop: 6,
         marginBottom: 12,
-        paddingLeft: 12,
-        paddingRight: 8,
-        height: 45,
+        position: "relative",
     },
-    dateText: { flex: 1, fontSize: 14, paddingRight: 8 },
-    dateIconUnified: { marginLeft: 4 },
+
+    hiddenWebDateInput: {
+        position: "absolute",
+        opacity: 0,
+        pointerEvents: "none",
+        width: 0,
+        height: 0,
+    },
+
+    dateWebDisplay: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "rgba(255,255,255,0.08)",
+        borderWidth: 1.2,
+        borderColor: "rgba(140,140,255,0.4)",
+        borderRadius: 12,
+        paddingHorizontal: 14,
+        paddingVertical: 12,
+        shadowColor: "#A5B4FC",
+        shadowOpacity: 0.4,
+        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 3 },
+        marginBottom: 12,
+    },
+
+    dateText: { flex: 1, fontSize: 14 },
+
     selectorWrapper: {
         marginTop: 6,
         marginBottom: 12,
-        borderRadius: 10,
-        borderWidth: 1.5,
-        borderColor: "#2563EB",
-        backgroundColor: "#fff",
+        borderRadius: 12,
+        borderWidth: 1.2,
+        borderColor: "rgba(140,140,255,0.4)",
+        backgroundColor: "rgba(255,255,255,0.08)",
     },
+
     select: { borderWidth: 0, backgroundColor: "transparent" },
+
     selectInner: {
         flexDirection: "row",
         alignItems: "center",
         paddingVertical: 12,
         paddingHorizontal: 10,
     },
-    selectorText: { color: "#111827", fontSize: 14 },
+
+    selectorText: { color: "#E0E7FF", fontSize: 14 },
+
     icon: { marginRight: 6 },
-    centered: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#fff" },
+
+    centered: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#0F0F2F",
+    },
+
     toast: {
         position: "absolute",
         bottom: 30,
@@ -304,7 +421,35 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         alignItems: "center",
     },
+
     toastText: { color: "#fff", fontSize: 14, fontWeight: "600" },
+
     toastSuccess: { backgroundColor: "#16A34A" },
+
     toastError: { backgroundColor: "#DC2626" },
+    successOverlay: {
+        position: "absolute",
+        left: 20,
+        right: 20,
+        bottom: 24,
+        justifyContent: "flex-end",
+        alignItems: "center",
+        zIndex: 9999,
+        pointerEvents: 'box-none',
+    },
+    successBox: {
+        width: '100%',
+        backgroundColor: '#16A34A',
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+        borderRadius: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    successText: {
+        color: '#FFFFFF',
+        fontSize: 15,
+        fontWeight: '700',
+        textAlign: 'center',
+    },
 });

@@ -243,7 +243,7 @@ export default function LoginScreen() {
       <View style={styles.content}>
         <Animated.View style={[styles.header, formStyle]}>
           <Ionicons name="airplane" size={60} color="#FFF" />
-          <Text style={styles.headerTitle}>Orbis Airlines</Text>
+          <Text style={styles.headerTitle}>Orbis</Text>
           <Text style={styles.headerSubtitle}>Tu viaje comienza aquí</Text>
         </Animated.View>
 

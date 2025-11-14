@@ -651,6 +651,7 @@ const styles = StyleSheet.create({
     color: "#64748B",
     fontWeight: "500",
   },
+
   // Header Styles
   headerBackground: {
     height: 180,
@@ -660,7 +661,7 @@ const styles = StyleSheet.create({
   },
   headerOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(2, 56, 89, 0.85)',
+    backgroundColor: "rgba(2, 56, 89, 0.85)",
     paddingTop: 50,
     paddingHorizontal: 20,
   },
@@ -704,6 +705,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginTop: 2,
   },
+
   // Stats Section
   statsSection: {
     padding: 20,
@@ -722,7 +724,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     gap: 12,
   },
-  statCard: {     
+  statCard: {
     width: width * 0.5,
     borderRadius: 16,
     padding: 15,
@@ -764,6 +766,7 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.8)",
     fontSize: 12,
   },
+
   // Action Section
   actionSection: {
     paddingHorizontal: 20,
@@ -797,6 +800,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "rgba(255,255,255,0.8)",
   },
+
   // Error State
   errorCard: {
     margin: 20,
@@ -835,6 +839,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "600",
   },
+
   // Empty State
   emptyCard: {
     margin: 20,
@@ -876,7 +881,8 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 14,
   },
-  // Trips Section
+
+  // Trips
   tripsSection: {
     paddingHorizontal: 20,
   },
@@ -936,7 +942,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
   },
   badgeText: {
     fontSize: 12,
@@ -997,7 +1003,8 @@ const styles = StyleSheet.create({
     color: "#05A6A6",
     fontWeight: "600",
   },
-  // Modal Styles
+
+  // Modal
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
@@ -1157,5 +1164,37 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     backgroundColor: "#9CA3AF",
+  },
+
+  // ⭐️ WEB DATE PICKER (AQUÍ ESTÁ LO QUE TE FALTABA)
+  dateWebWrapper: {
+    marginTop: 6,
+    marginBottom: 12,
+    position: "relative",
+  },
+  hiddenWebDateInput: {
+    position: "absolute",
+    opacity: 0,
+    pointerEvents: "none",
+    width: 0,
+    height: 0,
+  },
+  dateWebDisplay: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderWidth: 1.2,
+    borderColor: "rgba(140,140,255,0.4)",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    shadowColor: "#A5B4FC",
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+  },
+  dateText: {
+    flex: 1,
+    fontSize: 16,
   },
 });

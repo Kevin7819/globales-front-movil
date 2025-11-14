@@ -1,7 +1,7 @@
-import { Ionicons } from "@expo/vector-icons";
+import { Feather, Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -13,6 +13,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Animated,
 } from "react-native";
 
 import { Avatar } from "../../components/ui/Avatar";
@@ -28,6 +29,16 @@ export default function DashboardScreen() {
   const [loggingOut, setLoggingOut] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [upcomingTrips, setUpcomingTrips] = useState<any[]>([]);
+
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 900,
+      useNativeDriver: true,
+    }).start();
+  }, []);
 
   // Cargar usuario y viajes
   useEffect(() => {
@@ -90,10 +101,10 @@ export default function DashboardScreen() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
+    return date.toLocaleDateString("es-ES", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
     });
   };
 
@@ -113,7 +124,7 @@ export default function DashboardScreen() {
   if (loading || loggingOut) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#05A6A6" />
+        <ActivityIndicator size="large" color="#93C5FD" />
         <Text style={styles.loadingText}>
           {loggingOut ? "Cerrando sesión..." : "Cargando tu experiencia de viaje..."}
         </Text>
@@ -122,298 +133,308 @@ export default function DashboardScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Header con gradiente */}
-      <ImageBackground
-        source={{ uri: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2074&q=80' }}
-        style={styles.headerBackground}
-        imageStyle={styles.headerImage}
-      >
-        <View style={styles.headerOverlay}>
-          <View style={styles.header}>
-            <View style={styles.headerLeft}>
-              <View style={styles.logoContainer}>
-                <Ionicons name="airplane" size={28} color="#FFFFFF" />
-                <Text style={styles.headerTitle}>ORBIS</Text>
+    <View style={styles.screen}>
+      {/* Background decorative layers (clouds / planes) */}
+      <Animated.View pointerEvents="none" style={[styles.clouds, { opacity: fadeAnim }]} />
+      <Animated.View pointerEvents="none" style={[styles.clouds2, { opacity: fadeAnim }]} />
+      <Animated.View pointerEvents="none" style={[styles.planes, { opacity: fadeAnim }]} />
+
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+        <Animated.View style={{ opacity: fadeAnim }}>
+          {/* Header con imagen y overlay glass */}
+          <ImageBackground
+            source={{
+              uri:
+                "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2074&q=80",
+            }}
+            style={styles.headerBackground}
+            imageStyle={styles.headerImage}
+          >
+            <View style={styles.headerOverlay}>
+              <View style={styles.header}>
+                <View style={styles.headerLeft}>
+                  <View style={styles.brandRow}>
+                    <Feather name="globe" size={28} color="#BFDBFE" />
+                    <Text style={styles.headerTitle}>ORBIS</Text>
+                  </View>
+                  <Text style={styles.headerSubtitle}>Airlines</Text>
+                </View>
+
+                <TouchableOpacity style={styles.avatarButton} onPress={() => router.push("/dashboard/edit-profile")}>
+                  <Avatar
+                    src={user?.avatar || ""}
+                    fallback={user?.name?.[0]?.toUpperCase() || "?"}
+                    size={42}
+                    style={styles.avatar}
+                  />
+                </TouchableOpacity>
               </View>
-              <Text style={styles.headerSubtitle}>Airlines</Text>
+
+              <View style={styles.welcomeSection}>
+                <Text style={styles.welcomeText}>¡Bienvenido a bordo,</Text>
+                <Text style={styles.userName}>{user?.name}!</Text>
+                <Text style={styles.welcomeSubtitle}>Tu próxima aventura te espera</Text>
+              </View>
             </View>
-            <TouchableOpacity style={styles.avatarButton}>
-              <Avatar
-                src={user?.avatar || ""}
-                fallback={user?.name?.[0]?.toUpperCase() || "?"}
-                size={42}
-                style={styles.avatar}
-              />
-            </TouchableOpacity>
-          </View>
+          </ImageBackground>
 
-          <View style={styles.welcomeSection}>
-            <Text style={styles.welcomeText}>¡Bienvenido a bordo,</Text>
-            <Text style={styles.userName}>{user?.name}!</Text>
-            <Text style={styles.welcomeSubtitle}>
-              Tu próxima aventura te espera
-            </Text>
-          </View>
-        </View>
-      </ImageBackground>
+          {/* Quick Actions (glass card background) */}
+          <Card style={[styles.cardGlass, styles.quickActions]}>
+            <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
+            <View style={styles.actionsGrid}>
+              <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/map")}>
+                <View style={[styles.actionIcon, { backgroundColor: "#0EA5E9" }]}>
+                  <Ionicons name="map" size={24} color="#FFFFFF" />
+                </View>
+                <Text style={styles.actionText}>Mapa</Text>
+              </TouchableOpacity>
 
-      {/* Quick Actions */}
-      <View style={styles.quickActions}>
-        <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
-        <View style={styles.actionsGrid}>
-          <TouchableOpacity
-            style={styles.actionCard}
-            onPress={() => router.push("/map")}
-          >
-            <View style={[styles.actionIcon, { backgroundColor: '#0EA5E9' }]}>
-              <Ionicons name="map" size={24} color="#FFFFFF" />
-            </View>
-            <Text style={styles.actionText}>Mapa</Text>
-          </TouchableOpacity>
+              <TouchableOpacity style={styles.actionCard} onPress={() => router.push({ pathname: "/(tabs)/chat", params: { name: user?.name } })}>
+                <View style={[styles.actionIcon, { backgroundColor: "#10B981" }]}>
+                  <Ionicons name="chatbubble-ellipses" size={24} color="#FFFFFF" />
+                </View>
+                <Text style={styles.actionText}>Asistente</Text>
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.actionCard}
-            onPress={() => router.push({ pathname: "/(tabs)/chat", params: { name: user?.name } })}
-          >
-            <View style={[styles.actionIcon, { backgroundColor: '#10B981' }]}>
-              <Ionicons name="chatbubble-ellipses" size={24} color="#FFFFFF" />
-            </View>
-            <Text style={styles.actionText}>Asistente</Text>
-          </TouchableOpacity>
+              <TouchableOpacity style={styles.actionCard} onPress={handleAddTrip}>
+                <View style={[styles.actionIcon, { backgroundColor: "#8B5CF6" }]}>
+                  <Ionicons name="add-circle" size={24} color="#FFFFFF" />
+                </View>
+                <Text style={styles.actionText}>Nuevo Viaje</Text>
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.actionCard}
-            onPress={handleAddTrip}
-          >
-            <View style={[styles.actionIcon, { backgroundColor: '#8B5CF6' }]}>
-              <Ionicons name="add-circle" size={24} color="#FFFFFF" />
-            </View>
-            <Text style={styles.actionText}>Nuevo Viaje</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionCard}
-            onPress={() => router.push("/dashboard/edit-profile")}
-          >
-            <View style={[styles.actionIcon, { backgroundColor: '#F59E0B' }]}>
-              <Ionicons name="person" size={24} color="#FFFFFF" />
-            </View>
-            <Text style={styles.actionText}>Mi Perfil</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Próximos Viajes */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Próximos Viajes</Text>
-          <TouchableOpacity
-            style={styles.seeAllButton}
-            onPress={handleAddTrip}
-          >
-            <Text style={styles.seeAllText}>Ver todos</Text>
-            <Ionicons name="chevron-forward" size={16} color="#05A6A6" />
-          </TouchableOpacity>
-        </View>
-
-        {upcomingTrips.length === 0 ? (
-          <Card style={styles.emptyCard}>
-            <View style={styles.emptyContent}>
-              <Ionicons name="airplane-outline" size={48} color="#CBD5E1" />
-              <Text style={styles.emptyTitle}>No tienes viajes programados</Text>
-              <Text style={styles.emptyMessage}>
-                Comienza a planificar tu próxima aventura con Orbis Airlines
-              </Text>
-              <TouchableOpacity
-                style={styles.primaryButton}
-                onPress={handleAddTrip}
-              >
-                <Ionicons name="add" size={20} color="#FFFFFF" />
-                <Text style={styles.primaryButtonText}>Agregar Viaje</Text>
+              <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/dashboard/edit-profile")}>
+                <View style={[styles.actionIcon, { backgroundColor: "#F59E0B" }]}>
+                  <Ionicons name="person" size={24} color="#FFFFFF" />
+                </View>
+                <Text style={styles.actionText}>Mi Perfil</Text>
               </TouchableOpacity>
             </View>
           </Card>
-        ) : (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.tripsScroll}
-            contentContainerStyle={styles.tripsContainer}
-          >
-            {upcomingTrips.map((trip, index) => {
-              const tripStatus = getDaysUntilTrip(trip.departureDate);
-              return (
-                <Card key={trip.tripId} style={styles.tripCard}>
-                  <View style={styles.tripHeader}>
-                    <View style={styles.flightInfo}>
-                      <Text style={styles.destination}>{trip.destination}</Text>
-                      {trip.flightNumber && (
-                        <Text style={styles.flightNumber}>Vuelo {trip.flightNumber}</Text>
-                      )}
-                    </View>
-                    <View style={[styles.statusBadge, { backgroundColor: tripStatus.color }]}>
-                      <Text style={styles.statusText}>{tripStatus.text}</Text>
-                    </View>
-                  </View>
 
-                  <View style={styles.tripDetails}>
-                    <View style={styles.dateSection}>
-                      <Ionicons name="calendar" size={16} color="#64748B" />
-                      <Text style={styles.dateText}>{formatDate(trip.departureDate)}</Text>
-                    </View>
+          {/* Próximos Viajes */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Próximos Viajes</Text>
+              <TouchableOpacity style={styles.seeAllButton} onPress={handleAddTrip}>
+                <Text style={styles.seeAllText}>Ver todos</Text>
+                <Ionicons name="chevron-forward" size={16} color="#93C5FD" />
+              </TouchableOpacity>
+            </View>
 
-                    <View style={styles.reservationSection}>
-                      <Text style={styles.reservationLabel}>Código de Reserva</Text>
-                      <Text style={styles.reservationCode}>{trip.reservationCode}</Text>
-                    </View>
-                  </View>
-
-                  <TouchableOpacity style={styles.tripButton}>
-                    <Text style={styles.tripButtonText}>Ver Detalles</Text>
-                    <Ionicons name="arrow-forward" size={16} color="#05A6A6" />
-                  </TouchableOpacity>
-                </Card>
-              );
-            })}
-          </ScrollView>
-        )}
-      </View>
-
-      {/* Información del Viajero */}
-      <Card style={styles.travelerCard}>
-        <View style={styles.travelerHeader}>
-          <Ionicons name="ribbon" size={24} color="#05A6A6" />
-          <Text style={styles.travelerTitle}>Tu Perfil de Viajero</Text>
-        </View>
-
-        <View style={styles.travelerContent}>
-          <View style={styles.travelerInfo}>
-            <Avatar
-              src={user?.avatar || ""}
-              fallback={user?.name?.[0]?.toUpperCase() || "?"}
-              size={60}
-              style={styles.travelerAvatar}
-            />
-            <View style={styles.travelerDetails}>
-              <Text style={styles.travelerName}>{user?.name}</Text>
-              <Text style={styles.travelerEmail}>{user?.email}</Text>
-              <View style={styles.travelerStats}>
-                <View style={styles.stat}>
-                  <Text style={styles.statNumber}>{upcomingTrips.length}</Text>
-                  <Text style={styles.statLabel}>Viajes</Text>
-                </View>
-                <View style={styles.stat}>
-                  <Text style={styles.statNumber}>
-                    {new Set(upcomingTrips.map(t => t.destination)).size}
+            {upcomingTrips.length === 0 ? (
+              <Card style={[styles.emptyCard, styles.cardGlass]}>
+                <View style={styles.emptyContent}>
+                  <Ionicons name="airplane-outline" size={48} color="#CBD5E1" />
+                  <Text style={styles.emptyTitle}>No tienes viajes programados</Text>
+                  <Text style={styles.emptyMessage}>
+                    Comienza a planificar tu próxima aventura con Orbis Airlines
                   </Text>
-                  <Text style={styles.statLabel}>Destinos</Text>
+                  <TouchableOpacity style={styles.primaryButton} onPress={handleAddTrip}>
+                    <Ionicons name="add" size={20} color="#FFFFFF" />
+                    <Text style={styles.primaryButtonText}>Agregar Viaje</Text>
+                  </TouchableOpacity>
+                </View>
+              </Card>
+            ) : (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tripsScroll} contentContainerStyle={styles.tripsContainer}>
+                {upcomingTrips.map((trip, index) => {
+                  const tripStatus = getDaysUntilTrip(trip.departureDate);
+                  return (
+                    <Card key={trip.tripId} style={[styles.tripCard, styles.cardGlass]}>
+                      <View style={styles.tripHeader}>
+                        <View style={styles.flightInfo}>
+                          <Text style={styles.destination}>{trip.destination}</Text>
+                          {trip.flightNumber && <Text style={styles.flightNumber}>Vuelo {trip.flightNumber}</Text>}
+                        </View>
+                        <View style={[styles.statusBadge, { backgroundColor: tripStatus.color }]}>
+                          <Text style={styles.statusText}>{tripStatus.text}</Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.tripDetails}>
+                        <View style={styles.dateSection}>
+                          <Ionicons name="calendar" size={16} color="#64748B" />
+                          <Text style={styles.dateText}>{formatDate(trip.departureDate)}</Text>
+                        </View>
+
+                        <View style={styles.reservationSection}>
+                          <Text style={styles.reservationLabel}>Código de Reserva</Text>
+                          <Text style={styles.reservationCode}>{trip.reservationCode}</Text>
+                        </View>
+                      </View>
+
+                      <TouchableOpacity
+                        style={styles.tripButton}
+                        onPress={() => router.push({ pathname: "/trips", params: { tripId: trip.tripId } })}
+                      >
+                        <Text style={styles.tripButtonText}>Ver Detalles</Text>
+                        <Ionicons name="arrow-forward" size={16} color="#93C5FD" />
+                      </TouchableOpacity>
+                    </Card>
+                  );
+                })}
+              </ScrollView>
+            )}
+          </View>
+
+          {/* Información del Viajero */}
+          <Card style={[styles.travelerCard, styles.cardGlass]}>
+            <View style={styles.travelerHeader}>
+              <Ionicons name="ribbon" size={24} color="#93C5FD" />
+              <Text style={styles.travelerTitle}>Tu Perfil de Viajero</Text>
+            </View>
+
+            <View style={styles.travelerContent}>
+              <View style={styles.travelerInfo}>
+                <Avatar
+                  src={user?.avatar || ""}
+                  fallback={user?.name?.[0]?.toUpperCase() || "?"}
+                  size={60}
+                  style={styles.travelerAvatar}
+                />
+                <View style={styles.travelerDetails}>
+                  <Text style={styles.travelerName}>{user?.name}</Text>
+                  <Text style={styles.travelerEmail}>{user?.email}</Text>
+                  <View style={styles.travelerStats}>
+                    <View style={styles.stat}>
+                      <Text style={styles.statNumber}>{upcomingTrips.length}</Text>
+                      <Text style={styles.statLabel}>Viajes</Text>
+                    </View>
+                    <View style={styles.stat}>
+                      <Text style={styles.statNumber}>{new Set(upcomingTrips.map((t) => t.destination)).size}</Text>
+                      <Text style={styles.statLabel}>Destinos</Text>
+                    </View>
+                  </View>
                 </View>
               </View>
+
+              <View style={styles.travelerMeta}>
+                <View style={styles.metaItem}>
+                  <Ionicons name="flag" size={16} color="#64748B" />
+                  <Text style={styles.metaText}>{user?.countryOfOrigin || "No especificado"}</Text>
+                </View>
+                <View style={styles.metaItem}>
+                  <Ionicons name="language" size={16} color="#64748B" />
+                  <Text style={styles.metaText}>{user?.preferredLanguage || "No especificado"}</Text>
+                </View>
+              </View>
+
+              <TouchableOpacity style={styles.editProfileButton} onPress={() => router.push("/dashboard/edit-profile")}>
+                <Ionicons name="create-outline" size={18} color="#FFFFFF" />
+                <Text style={styles.editProfileText}>Editar perfil</Text>
+              </TouchableOpacity>
             </View>
+          </Card>
+
+          {/* Servicios Orbis */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Servicios Orbis</Text>
+            <View style={styles.servicesGrid}>
+              <TouchableOpacity style={styles.serviceCard}>
+                <View style={styles.serviceIcon}>
+                  <Ionicons name="airplane" size={22} color="#93C5FD" />
+                </View>
+                <Text style={styles.serviceText}>Viajes</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.serviceCard}>
+                <View style={styles.serviceIcon}>
+                  <Ionicons name="map" size={22} color="#93C5FD" />
+                </View>
+                <Text style={styles.serviceText}>Mapas</Text>
+              </TouchableOpacity>
+
+              <View style={[styles.serviceCard, { opacity: 0.6 }]}>
+                <View style={styles.serviceIcon}>
+                  <Ionicons name="book-outline" size={22} color="#93C5FD" />
+                </View>
+                <Text style={styles.serviceText}>Guías (Próx.)</Text>
+              </View>
+
+              <View style={[styles.serviceCard, { opacity: 0.6 }]}>
+                <View style={styles.serviceIcon}>
+                  <Ionicons name="time-outline" size={22} color="#93C5FD" />
+                </View>
+                <Text style={styles.serviceText}>Próximamente</Text>
+              </View>
+            </View>
+
+            <Text style={styles.smallNote}>
+              Algunas funciones como las guías estarán disponibles más adelante.
+            </Text>
           </View>
 
-          <View style={styles.travelerMeta}>
-            <View style={styles.metaItem}>
-              <Ionicons name="flag" size={16} color="#64748B" />
-              <Text style={styles.metaText}>{user?.countryOfOrigin || "No especificado"}</Text>
-            </View>
-            <View style={styles.metaItem}>
-              <Ionicons name="language" size={16} color="#64748B" />
-              <Text style={styles.metaText}>{user?.preferredLanguage || "No especificado"}</Text>
-            </View>
+          {/* Footer */}
+          <View style={styles.footer}>
+            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+              <Ionicons name="log-out-outline" size={20} color="#93C5FD" />
+              <Text style={styles.logoutText}>Cerrar sesión</Text>
+            </TouchableOpacity>
+            <Text style={styles.footerText}>Orbis Airlines © 2024</Text>
           </View>
-
-          <TouchableOpacity
-            style={styles.editProfileButton}
-            onPress={() => router.push("/dashboard/edit-profile")}
-          >
-            <Ionicons name="create-outline" size={18} color="#FFFFFF" />
-            <Text style={styles.editProfileText}>Editar perfil</Text>
-          </TouchableOpacity>
-
-        </View>
-      </Card>
-
-      {/* Servicios Orbis */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Servicios Orbis</Text>
-        <View style={styles.servicesGrid}>
-
-          {/* Viajes (activo) */}
-          <TouchableOpacity style={styles.serviceCard}>
-            <View style={styles.serviceIcon}>
-              <Ionicons name="airplane" size={22} color="#05A6A6" />
-            </View>
-            <Text style={styles.serviceText}>Viajes</Text>
-          </TouchableOpacity>
-
-          {/* Mapas (activo) */}
-          <TouchableOpacity style={styles.serviceCard}>
-            <View style={styles.serviceIcon}>
-              <Ionicons name="map" size={22} color="#05A6A6" />
-            </View>
-            <Text style={styles.serviceText}>Mapas</Text>
-          </TouchableOpacity>
-
-          {/* Guías (próximamente / deshabilitado) */}
-          <View style={[styles.serviceCard, { opacity: 0.6 }]}>
-            <View style={styles.serviceIcon}>
-              <Ionicons name="book-outline" size={22} color="#05A6A6" />
-            </View>
-            <Text style={styles.serviceText}>Guías (Próx.)</Text>
-          </View>
-
-          {/* Otro placeholder opcional */}
-          <View style={[styles.serviceCard, { opacity: 0.6 }]}>
-            <View style={styles.serviceIcon}>
-              <Ionicons name="time-outline" size={22} color="#05A6A6" />
-            </View>
-            <Text style={styles.serviceText}>Próximamente</Text>
-          </View>
-
-        </View>
-
-        <Text style={{
-          fontSize: 12,
-          color: '#64748B',
-          textAlign: 'center',
-          marginTop: 12,
-          fontStyle: 'italic'
-        }}>
-          Algunas funciones como las guías estarán disponibles más adelante.
-        </Text>
-      </View>
-
-      {/* Footer */}
-      <View style={styles.footer}>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Ionicons name="log-out-outline" size={20} color="#64748B" />
-          <Text style={styles.logoutText}>Cerrar sesión</Text>
-        </TouchableOpacity>
-        <Text style={styles.footerText}>Orbis Airlines © 2024</Text>
-      </View>
-    </ScrollView>
+        </Animated.View>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: "#0A0F29", // match register bg
+    alignItems: "center",
+    justifyContent: "flex-start",
+  },
+
+  // decorative layers (transparent shapes) to mimic register visuals
+  clouds: {
+    position: "absolute",
+    width: "200%",
+    height: "40%",
+    top: -20,
+    backgroundColor: "transparent",
+    zIndex: 0,
+  },
+  clouds2: {
+    position: "absolute",
+    width: "200%",
+    height: "40%",
+    top: 100,
+    backgroundColor: "transparent",
+    zIndex: 0,
+  },
+  planes: {
+    position: "absolute",
+    top: 60,
+    left: -100,
+    width: 600,
+    height: 600,
+    backgroundColor: "transparent",
+    borderRadius: 300,
+    zIndex: 0,
+  },
+
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    width: "100%",
+    maxWidth: 920,
   },
+
   centered: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#0A0F29",
   },
+
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: "#64748B",
+    color: "#A5B4FC",
     fontWeight: "500",
   },
+
   headerBackground: {
     height: 220,
   },
@@ -422,20 +443,20 @@ const styles = StyleSheet.create({
   },
   headerOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(2, 56, 89, 0.85)',
-    paddingTop: 50,
+    backgroundColor: "rgba(2, 56, 89, 0.85)",
+    paddingTop: 32,
     paddingHorizontal: 20,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 30,
+    marginBottom: 18,
   },
   headerLeft: {
     alignItems: "flex-start",
   },
-  logoContainer: {
+  brandRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
@@ -443,53 +464,75 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: "800",
-    color: "#FFFFFF",
+    color: "#E0EAFF",
     letterSpacing: 2,
+    marginLeft: 8,
   },
   headerSubtitle: {
     fontSize: 12,
-    color: "rgba(255,255,255,0.8)",
+    color: "#A5B4FC",
     fontWeight: "300",
     marginTop: -2,
   },
+
   avatarButton: {
     borderRadius: 21,
     overflow: "hidden",
   },
   avatar: {
     borderWidth: 2,
-    borderColor: "rgba(255,255,255,0.3)",
+    borderColor: "rgba(255,255,255,0.18)",
   },
+
   welcomeSection: {
-    marginBottom: 10,
+    marginBottom: 12,
   },
   welcomeText: {
     fontSize: 16,
-    color: "rgba(255,255,255,0.9)",
+    color: "#E0EAFF",
     fontWeight: "300",
   },
   userName: {
     fontSize: 28,
-    color: "#FFFFFF",
+    color: "#E0EAFF",
     fontWeight: "700",
     marginTop: 2,
   },
   welcomeSubtitle: {
     fontSize: 14,
-    color: "rgba(255,255,255,0.8)",
+    color: "#CBD5E1",
     fontWeight: "300",
     marginTop: 4,
   },
+
+  // glass card base used across
+  cardGlass: {
+    backgroundColor: "rgba(255,255,255,0.04)",
+    padding: 18,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    shadowColor: "#000",
+    shadowOpacity: 0.25,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    marginHorizontal: 20,
+    marginTop: -30,
+    zIndex: 2,
+  },
+
   quickActions: {
-    padding: 20,
-    backgroundColor: "#FFFFFF",
+    marginTop: 8,
+    paddingVertical: 14,
   },
+
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "700",
-    color: "#0F172A",
-    marginBottom: 16,
+    color: "#E0EAFF",
+    marginBottom: 12,
   },
+
   actionsGrid: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -501,26 +544,32 @@ const styles = StyleSheet.create({
   actionIcon: {
     width: 56,
     height: 56,
-    borderRadius: 16,
+    borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
   },
   actionText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#374151",
+    color: "#CBD5E1",
     textAlign: "center",
   },
+
   section: {
-    paddingHorizontal: 20,
-    marginBottom: 24,
+    marginTop: 16,
+    marginBottom: 8,
   },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 16,
+    marginHorizontal: 20,
+    marginBottom: 8,
   },
   seeAllButton: {
     flexDirection: "row",
@@ -528,17 +577,18 @@ const styles = StyleSheet.create({
   },
   seeAllText: {
     fontSize: 14,
-    color: "#05A6A6",
+    color: "#93C5FD",
     fontWeight: "600",
-    marginRight: 2,
+    marginRight: 6,
   },
+
   emptyCard: {
-    padding: 24,
+    padding: 20,
     borderRadius: 16,
-    backgroundColor: "#F8FAFC",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "rgba(255,255,255,0.06)",
     borderStyle: "dashed",
+    backgroundColor: "transparent",
   },
   emptyContent: {
     alignItems: "center",
@@ -546,31 +596,32 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#475569",
+    color: "#E0EAFF",
     marginTop: 16,
     marginBottom: 8,
   },
   emptyMessage: {
     fontSize: 14,
-    color: "#64748B",
+    color: "#A5B4FC",
     textAlign: "center",
     marginBottom: 20,
     lineHeight: 20,
   },
   primaryButton: {
-    backgroundColor: "#05A6A6",
+    backgroundColor: "#93C5FD",
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
     borderRadius: 12,
     gap: 8,
   },
   primaryButtonText: {
-    color: "#FFFFFF",
-    fontWeight: "600",
+    color: "#0A0F29",
+    fontWeight: "700",
     fontSize: 14,
   },
+
   tripsScroll: {
     marginHorizontal: -20,
   },
@@ -580,20 +631,16 @@ const styles = StyleSheet.create({
   },
   tripCard: {
     width: width * 0.75,
-    padding: 16,
-    borderRadius: 16,
-    backgroundColor: "#FFFFFF",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    padding: 14,
+    borderRadius: 14,
+    backgroundColor: "transparent",
+    marginRight: 12,
   },
   tripHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 12,
+    marginBottom: 10,
   },
   flightInfo: {
     flex: 1,
@@ -601,36 +648,37 @@ const styles = StyleSheet.create({
   destination: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#0F172A",
+    color: "#E0EAFF",
     marginBottom: 4,
   },
   flightNumber: {
     fontSize: 12,
-    color: "#64748B",
+    color: "#A5B4FC",
     fontWeight: "500",
   },
   statusBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: 8,
   },
   statusText: {
     fontSize: 10,
     color: "#FFFFFF",
     fontWeight: "700",
   },
+
   tripDetails: {
-    marginBottom: 16,
+    marginBottom: 12,
   },
   dateSection: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    marginBottom: 12,
+    gap: 8,
+    marginBottom: 8,
   },
   dateText: {
     fontSize: 14,
-    color: "#374151",
+    color: "#CBD5E1",
     fontWeight: "500",
   },
   reservationSection: {
@@ -640,13 +688,13 @@ const styles = StyleSheet.create({
   },
   reservationLabel: {
     fontSize: 12,
-    color: "#64748B",
+    color: "#A5B4FC",
   },
   reservationCode: {
     fontSize: 14,
     fontFamily: "monospace",
     fontWeight: "700",
-    color: "#0F172A",
+    color: "#E0EAFF",
   },
   tripButton: {
     flexDirection: "row",
@@ -654,39 +702,35 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: 10,
     borderTopWidth: 1,
-    borderTopColor: "#F1F5F9",
+    borderTopColor: "rgba(255,255,255,0.04)",
   },
   tripButtonText: {
     fontSize: 14,
-    color: "#05A6A6",
+    color: "#93C5FD",
     fontWeight: "600",
-    marginRight: 4,
+    marginRight: 6,
   },
+
   travelerCard: {
     marginHorizontal: 20,
-    marginBottom: 24,
-    padding: 20,
-    borderRadius: 16,
-    backgroundColor: "#FFFFFF",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    marginBottom: 12,
+    padding: 16,
+    borderRadius: 14,
+    backgroundColor: "transparent",
   },
   travelerHeader: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   travelerTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#0F172A",
+    color: "#E0EAFF",
   },
   travelerContent: {
-    gap: 16,
+    gap: 12,
   },
   travelerInfo: {
     flexDirection: "row",
@@ -698,18 +742,18 @@ const styles = StyleSheet.create({
   },
   travelerDetails: {
     flex: 1,
-    marginLeft: 16,
+    marginLeft: 14,
   },
   travelerName: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#0F172A",
+    color: "#E0EAFF",
     marginBottom: 2,
   },
   travelerEmail: {
     fontSize: 14,
-    color: "#64748B",
-    marginBottom: 12,
+    color: "#A5B4FC",
+    marginBottom: 8,
   },
   travelerStats: {
     flexDirection: "row",
@@ -721,11 +765,11 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#05A6A6",
+    color: "#93C5FD",
   },
   statLabel: {
     fontSize: 12,
-    color: "#64748B",
+    color: "#A5B4FC",
     marginTop: 2,
   },
   travelerMeta: {
@@ -738,11 +782,13 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 14,
-    color: "#475569",
+    color: "#CBD5E1",
   },
+
   servicesGrid: {
     flexDirection: "row",
     justifyContent: "space-between",
+    marginHorizontal: 20,
   },
   serviceCard: {
     alignItems: "center",
@@ -752,7 +798,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 12,
-    backgroundColor: "#FEF2F2",
+    backgroundColor: "rgba(255,255,255,0.03)",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 8,
@@ -760,35 +806,42 @@ const styles = StyleSheet.create({
   serviceText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#374151",
+    color: "#CBD5E1",
     textAlign: "center",
   },
+
+  smallNote: {
+    fontSize: 12,
+    color: "#A5B4FC",
+    textAlign: "center",
+    marginTop: 12,
+    fontStyle: "italic",
+  },
+
   editProfileButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#05A6A6",
+    backgroundColor: "#93C5FD",
     borderRadius: 10,
     paddingVertical: 10,
     marginTop: 12,
     gap: 6,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.15,
-    shadowRadius: 3,
-    elevation: 3,
+    shadowRadius: 6,
   },
   editProfileText: {
-    color: "#FFFFFF",
-    fontWeight: "600",
+    color: "#0A0F29",
+    fontWeight: "700",
     fontSize: 14,
   },
+
   footer: {
     padding: 20,
     alignItems: "center",
-    borderTopWidth: 1,
-    borderTopColor: "#F1F5F9",
-    marginTop: 20,
+    marginTop: 8,
   },
   logoutButton: {
     flexDirection: "row",
@@ -801,7 +854,7 @@ const styles = StyleSheet.create({
   },
   logoutText: {
     fontSize: 14,
-    color: "#64748B",
+    color: "#A5B4FC",
     fontWeight: "500",
   },
   footerText: {
