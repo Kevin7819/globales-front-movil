@@ -16,12 +16,12 @@ export function Separator({ orientation = "horizontal", style }: SeparatorProps)
 const styles = StyleSheet.create({
   horizontal: {
     height: 1,
-    backgroundColor: "#E5E7EB", // gris claro (equivalente a border-gray-200)
-    marginVertical: 12,
+    backgroundColor: "rgba(255,255,255,0.1)",
+    marginVertical: 16,
   },
   vertical: {
     width: 1,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: "rgba(255,255,255,0.1)",
     alignSelf: "stretch",
   },
 });

@@ -17,7 +17,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#374151", // gris oscuro (text-gray-700)
+    color: "#ffffffff", // gris oscuro (text-gray-700)
     marginBottom: 4,
   },
 });

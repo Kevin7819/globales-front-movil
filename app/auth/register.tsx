@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons"
 import { useRouter } from "expo-router"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import {
   ActivityIndicator,
   Platform,
@@ -9,6 +9,8 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Animated,
+  Dimensions
 } from "react-native"
 import DateTimePickerModal from "react-native-modal-datetime-picker"
 import ModalSelector from "react-native-modal-selector"
@@ -22,12 +24,12 @@ import { locationService } from "../../services/LocationApi"
 
 export default function RegisterScreen() {
   const router = useRouter()
-  const [countries, setCountries] = useState<{ key: number; label: string }[]>([])
-  const [languages, setLanguages] = useState<{ key: number; label: string }[]>([])
+  const [countries, setCountries] = useState([])
+  const [languages, setLanguages] = useState([])
   const [loadingData, setLoadingData] = useState(true)
   const [loading, setLoading] = useState(false)
   const [showDatePicker, setShowDatePicker] = useState(false)
-  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null)
+  const [toast, setToast] = useState(null)
 
   const [form, setForm] = useState({
     firstName: "",
@@ -40,14 +42,29 @@ export default function RegisterScreen() {
     birthDate: "",
   })
 
+  const fadeAnim = useRef(new Animated.Value(0)).current
+  const screenWidth = Dimensions.get("window").width
+
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 900,
+      useNativeDriver: true
+    }).start()
+  }, [])
+
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [cList, lList] = await Promise.all([locationService.fetchCountries(), locationService.fetchLanguages()])
+        const [cList, lList] = await Promise.all([
+          locationService.fetchCountries(),
+          locationService.fetchLanguages(),
+        ])
         setCountries(cList.map((c, i) => ({ key: i, label: c })))
         setLanguages(lList.map((l, i) => ({ key: i, label: l })))
       } catch {
-        showToast("error", "No se pudieron cargar países o idiomas.")
+        setCountries([])
+        setLanguages([])
       } finally {
         setLoadingData(false)
       }
@@ -55,7 +72,7 @@ export default function RegisterScreen() {
     loadData()
   }, [])
 
-  const showToast = (type: "success" | "error", message: string, redirect?: boolean) => {
+  const showToast = (type, message, redirect) => {
     setToast({ type, message })
     setTimeout(() => {
       setToast(null)
@@ -63,11 +80,11 @@ export default function RegisterScreen() {
     }, 2500)
   }
 
-  const handleChange = (key: keyof typeof form, value: string) => {
+  const handleChange = (key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }))
   }
 
-  const handleDateConfirm = (date: Date) => {
+  const handleDateConfirm = (date) => {
     const formatted = date.toISOString().split("T")[0]
     setForm((prev) => ({ ...prev, birthDate: formatted }))
     setShowDatePicker(false)
@@ -88,10 +105,7 @@ export default function RegisterScreen() {
 
   const handleRegister = async () => {
     const err = validate()
-    if (err) {
-      showToast("error", err)
-      return
-    }
+    if (err) return showToast("error", err)
 
     try {
       setLoading(true)
@@ -106,7 +120,7 @@ export default function RegisterScreen() {
       )
 
       if (res.isSuccess) {
-        showToast("success", "Registro exitoso ✅", true)
+        showToast("success", "Registro exitoso", true)
         setForm({
           firstName: "",
           lastName: "",
@@ -117,10 +131,8 @@ export default function RegisterScreen() {
           preferredLanguage: "",
           birthDate: "",
         })
-      } else {
-        showToast("error", res.message || "Error en el registro.")
-      }
-    } catch (e: any) {
+      } else showToast("error", res.message || "Error en el registro.")
+    } catch (e) {
       showToast("error", e?.message || "No se pudo registrar el usuario.")
     } finally {
       setLoading(false)
@@ -128,262 +140,296 @@ export default function RegisterScreen() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.push("/")}>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Feather name="arrow-left" size={16} color="#2563EB" />
-            <Text style={styles.link}> Volver al inicio</Text>
-          </View>
-        </TouchableOpacity>
-
-        <View style={styles.brand}>
-          <Feather name="globe" size={28} color="#2563EB" />
-          <Text style={styles.brandTitle}>Orbis</Text>
-        </View>
-
-        <Text style={styles.subtitle}>Crea tu cuenta gratuita</Text>
-      </View>
-
-      <Card>
-        <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Crear Cuenta</Text>
-          <Text style={styles.cardDesc}>Únete a miles de viajeros inteligentes</Text>
-        </View>
-
-        <View>
-          <View style={styles.row}>
-            <View style={styles.col}>
-              <Label>Nombre</Label>
-              <Input
-                placeholder="Juan"
-                value={form.firstName}
-                onChangeText={(t) => handleChange("firstName", t)}
-              />
-            </View>
-            <View style={styles.col}>
-              <Label>Apellido</Label>
-              <Input
-                placeholder="Pérez"
-                value={form.lastName}
-                onChangeText={(t) => handleChange("lastName", t)}
-              />
-            </View>
-          </View>
-
-          <Label>Correo electrónico</Label>
-          <Input
-            placeholder="tu@email.com"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            value={form.email}
-            onChangeText={(t) => handleChange("email", t)}
-          />
-
-          <Label>Contraseña</Label>
-          <Input
-            placeholder="••••••••"
-            secureTextEntry
-            value={form.password}
-            onChangeText={(t) => handleChange("password", t)}
-          />
-
-          <Label>Confirmar Contraseña</Label>
-          <Input
-            placeholder="••••••••"
-            secureTextEntry
-            value={form.confirmPassword}
-            onChangeText={(t) => handleChange("confirmPassword", t)}
-          />
-
-          <Label>Fecha de Nacimiento</Label>
-          {Platform.OS === "web" ? (
-            <View style={styles.dateInputUnified}>
-              {/* @ts-ignore */}
-              <input
-                type="date"
-                value={form.birthDate}
-                onChange={(e) => handleChange("birthDate", e.target.value)}
-                max={new Date().toISOString().split("T")[0]}
-                style={{
-                  flex: 1,
-                  color: "#111827",
-                  fontSize: 14,
-                  border: "none",
-                  background: "transparent",
-                  height: 40,
-                  outline: "none",
-                  paddingRight: 8,
-                  fontFamily: "inherit",
-                }}
-              />
-              <Feather name="calendar" size={20} color="#2563EB" style={styles.dateIconUnified} />
-            </View>
-          ) : (
-            <TouchableOpacity
-              style={styles.dateInputUnified}
-              onPress={() => setShowDatePicker(true)}
-              activeOpacity={0.8}
-            >
-              <Text
-                style={[
-                  styles.dateText,
-                  { color: form.birthDate ? "#111827" : "#9CA3AF" },
-                ]}
-              >
-                {form.birthDate || "Selecciona tu fecha"}
-              </Text>
-              <Feather name="calendar" size={20} color="#2563EB" style={styles.dateIconUnified} />
-              <DateTimePickerModal
-                isVisible={showDatePicker}
-                mode="date"
-                onConfirm={handleDateConfirm}
-                onCancel={() => setShowDatePicker(false)}
-                maximumDate={new Date()}
-              />
+    <View style={styles.screen}>
+      <Animated.View pointerEvents="none" style={[styles.clouds, { opacity: fadeAnim }]} />
+      <Animated.View pointerEvents="none" style={[styles.clouds2, { opacity: fadeAnim }]} />
+      <Animated.View pointerEvents="none" style={[styles.planes, { opacity: fadeAnim }]} />
+      <ScrollView contentContainerStyle={styles.container}>
+        <Animated.View style={{ opacity: fadeAnim, zIndex: 2 }}>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => router.push("/")}>
+              <View style={styles.backRow}>
+                <Feather name="arrow-left" size={16} color="#93C5FD" />
+                <Text style={styles.link}> Volver</Text>
+              </View>
             </TouchableOpacity>
-          )}
 
-          <Label>País de Origen</Label>
-          {loadingData ? (
-            <ActivityIndicator color="#2563EB" style={{ marginVertical: 10 }} />
-          ) : (
-            <ModalSelector
-              data={countries}
-              initValue="Selecciona tu país"
-              onChange={(option) => handleChange("countryOfOrigin", option.label)}
-              style={styles.selectorWrapper}
-              initValueTextStyle={styles.selectorText}
-              selectTextStyle={styles.selectorText}
-              optionTextStyle={{ color: "#111827" }}
-              selectStyle={styles.select}
-              cancelText="Cancelar"
-            >
-              <View style={styles.selectInner}>
-                <Feather name="map-pin" size={18} color="#2563EB" style={styles.icon} />
-                <Text style={styles.selectorText}>
-                  {form.countryOfOrigin || "Selecciona tu país"}
-                </Text>
+            <View style={styles.brand}>
+              <Feather name="globe" size={32} color="#BFDBFE" />
+              <Text style={styles.brandTitle}>Orbis</Text>
+            </View>
+
+            <Text style={styles.subtitle}>Creá tu cuenta y viajá por el cosmos</Text>
+          </View>
+
+          <Card style={[styles.cardGlass, { zIndex: 3 }]}>
+            <Text style={styles.cardTitle}>Crear Cuenta</Text>
+            <Text style={styles.cardDesc}>Viajeros inteligentes te esperan</Text>
+
+            <View style={styles.row}>
+              <View style={styles.col}>
+                <Label>Nombre</Label>
+                <Input
+                  placeholder="Juan"
+                  value={form.firstName}
+                  onChangeText={(t) => handleChange("firstName", t)}
+                />
               </View>
-            </ModalSelector>
-          )}
-
-          <Label>Idioma Preferido</Label>
-          {loadingData ? (
-            <ActivityIndicator color="#2563EB" style={{ marginVertical: 10 }} />
-          ) : (
-            <ModalSelector
-              data={languages}
-              initValue="Selecciona tu idioma"
-              onChange={(option) => handleChange("preferredLanguage", option.label)}
-              style={styles.selectorWrapper}
-              initValueTextStyle={styles.selectorText}
-              selectTextStyle={styles.selectorText}
-              optionTextStyle={{ color: "#111827" }}
-              selectStyle={styles.select}
-              cancelText="Cancelar"
-            >
-              <View style={styles.selectInner}>
-                <Feather name="globe" size={18} color="#2563EB" style={styles.icon} />
-                <Text style={styles.selectorText}>
-                  {form.preferredLanguage || "Selecciona tu idioma"}
-                </Text>
+              <View style={styles.col}>
+                <Label>Apellido</Label>
+                <Input
+                  placeholder="Pérez"
+                  value={form.lastName}
+                  onChangeText={(t) => handleChange("lastName", t)}
+                />
               </View>
-            </ModalSelector>
-          )}
+            </View>
 
-          {loading ? (
-            <ActivityIndicator size="large" color="#2563EB" style={{ marginTop: 12 }} />
-          ) : (
-            <Button title="Crear Cuenta" onPress={handleRegister} style={{ marginTop: 12 }} />
-          )}
+            <Label>Correo electrónico</Label>
+            <Input
+              placeholder="tu@email.com"
+              keyboardType="email-address"
+              value={form.email}
+              onChangeText={(t) => handleChange("email", t)}
+            />
 
-          <Separator />
+            <Label>Contraseña</Label>
+            <Input
+              placeholder="••••••••"
+              secureTextEntry
+              value={form.password}
+              onChangeText={(t) => handleChange("password", t)}
+            />
 
-          <Text style={styles.footer}>
-            ¿Ya tienes cuenta?{" "}
-            <Text style={styles.link} onPress={() => router.push("/auth/login")}>
-              Inicia sesión
+            <Label>Confirmar Contraseña</Label>
+            <Input
+              placeholder="••••••••"
+              secureTextEntry
+              value={form.confirmPassword}
+              onChangeText={(t) => handleChange("confirmPassword", t)}
+            />
+
+            <Label>Fecha de Nacimiento</Label>
+            {Platform.OS === "web" ? (
+              <View style={styles.dateInput}>
+                <input
+                  type="date"
+                  value={form.birthDate}
+                  onChange={(e) => handleChange("birthDate", e.target.value)}
+                  max={new Date().toISOString().split("T")[0]}
+                  style={styles.dateNative}
+                />
+                <Feather name="calendar" size={20} color="#93C5FD" />
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={styles.dateInput}
+                onPress={() => setShowDatePicker(true)}
+              >
+                <Text style={styles.dateText}>
+                  {form.birthDate || "Selecciona tu fecha"}
+                </Text>
+                <Feather name="calendar" size={20} color="#93C5FD" />
+                <DateTimePickerModal
+                  isVisible={showDatePicker}
+                  mode="date"
+                  onConfirm={handleDateConfirm}
+                  onCancel={() => setShowDatePicker(false)}
+                  maximumDate={new Date()}
+                />
+              </TouchableOpacity>
+            )}
+
+            <Label>País de Origen</Label>
+            {loadingData ? (
+              <ActivityIndicator color="#93C5FD" />
+            ) : (
+              <ModalSelector
+                data={countries}
+                initValue="Selecciona tu país"
+                onChange={(o) => handleChange("countryOfOrigin", o.label)}
+                style={styles.selector}
+                selectStyle={styles.selectorInner}
+                selectTextStyle={styles.selectorText}
+                optionTextStyle={{ color: "#000" }}
+              >
+                <View style={styles.selectorInner}>
+                  <Feather name="map-pin" size={18} color="#93C5FD" />
+                  <Text style={styles.selectorText}>
+                    {form.countryOfOrigin || "Selecciona tu país"}
+                  </Text>
+                </View>
+              </ModalSelector>
+            )}
+
+            <Label>Idioma Preferido</Label>
+            {loadingData ? (
+              <ActivityIndicator color="#93C5FD" />
+            ) : (
+              <ModalSelector
+                data={languages}
+                initValue="Selecciona tu idioma"
+                onChange={(o) => handleChange("preferredLanguage", o.label)}
+                style={styles.selector}
+                selectStyle={styles.selectorInner}
+                selectTextStyle={styles.selectorText}
+                optionTextStyle={{ color: "#000" }}
+              >
+                <View style={styles.selectorInner}>
+                  <Feather name="globe" size={18} color="#93C5FD" />
+                  <Text style={styles.selectorText}>
+                    {form.preferredLanguage || "Selecciona tu idioma"}
+                  </Text>
+                </View>
+              </ModalSelector>
+            )}
+
+            {loading ? (
+              <ActivityIndicator size="large" color="#93C5FD" />
+            ) : (
+              <Button title="Crear Cuenta" onPress={handleRegister} style={{ marginTop: 12 }} />
+            )}
+
+            <Separator />
+
+            <Text style={styles.footer}>
+              ¿Ya tenés cuenta?{" "}
+              <Text style={styles.link} onPress={() => router.push("/auth/login")}>
+                Iniciar sesión
+              </Text>
             </Text>
-          </Text>
-        </View>
-      </Card>
+          </Card>
+        </Animated.View>
 
-      {toast && (
-        <View
-          style={[
-            styles.toast,
-            toast.type === "success" ? styles.toastSuccess : styles.toastError,
-          ]}
-        >
-          <Text style={styles.toastText}>{toast.message}</Text>
-        </View>
-      )}
-    </ScrollView>
+        {toast && (
+          <View style={[styles.toast, toast.type === "success" ? styles.toastSuccess : styles.toastError]}>
+            <Text style={styles.toastText}>{toast.message}</Text>
+          </View>
+        )}
+      </ScrollView>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, padding: 20, backgroundColor: "#EEF2FF" },
-  header: { alignItems: "center", marginBottom: 20 },
+  screen: {
+    flex: 1,
+    backgroundColor: "#0A0F29",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  clouds: {
+    position: "absolute",
+    width: "200%",
+    height: "40%",
+    top: 0,
+    backgroundColor: "transparent",
+    zIndex: 0
+  },
+  clouds2: {
+    position: "absolute",
+    width: "200%",
+    height: "40%",
+    top: 120,
+    backgroundColor: "transparent",
+    zIndex: 0
+  },
+  planes: {
+    position: "absolute",
+    top: 80,
+    left: -100,
+    width: 600,
+    height: 600,
+    backgroundColor: "transparent",
+    borderRadius: 300,
+    zIndex: 0
+  },
+  container: {
+    flexGrow: 1,
+    padding: 26,
+    width: "100%",
+    maxWidth: 480,
+    zIndex: 2
+  },
+  header: { alignItems: "center", marginBottom: 24 },
   brand: { flexDirection: "row", alignItems: "center", marginTop: 12 },
-  brandTitle: { fontSize: 22, fontWeight: "bold", marginLeft: 8, color: "#111827" },
-  subtitle: { fontSize: 14, color: "#4B5563", marginTop: 6 },
-  cardHeader: { marginBottom: 16 },
-  cardTitle: { fontSize: 18, fontWeight: "bold", color: "#111827" },
-  cardDesc: { fontSize: 14, color: "#6B7280" },
-  row: { flexDirection: "row", gap: 8 },
+  backRow: { flexDirection: "row", alignItems: "center" },
+  brandTitle: { fontSize: 26, fontWeight: "bold", marginLeft: 10, color: "#E0EAFF" },
+  subtitle: { color: "#A5B4FC", marginTop: 6, fontSize: 15, textAlign: "center" },
+  cardGlass: {
+    backgroundColor: "rgba(255,255,255,0.06)",
+    padding: 24,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.18)",
+    shadowColor: "#000",
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    backdropFilter: "blur(12px)"
+  },
+  cardTitle: { color: "#E0EAFF", fontSize: 20, fontWeight: "bold" },
+  cardDesc: { color: "#CBD5E1", marginBottom: 20 },
+  row: { flexDirection: "row", gap: 10 },
   col: { flex: 1 },
-  footer: { textAlign: "center", fontSize: 14, color: "#6B7280", marginTop: 20 },
-  link: { color: "#2563EB", fontWeight: "600" },
-  dateInputUnified: {
+  dateInput: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1.5,
-    borderColor: "#2563EB",
-    borderRadius: 10,
-    backgroundColor: "#fff",
-    marginTop: 6,
-    marginBottom: 12,
-    paddingLeft: 12,
-    paddingRight: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
+    backgroundColor: "rgba(255,255,255,0.06)",
+    paddingHorizontal: 12,
     height: 45,
+    borderRadius: 10,
+    marginBottom: 12
+  },
+  dateNative: {
+    flex: 1,
+    backgroundColor: "transparent",
+    border: "none",
+    color: "#fff"
   },
   dateText: {
     flex: 1,
-    fontSize: 14,
-    paddingRight: 8,
+    color: "#fff"
   },
-  dateIconUnified: {
-    marginLeft: 4,
-  },
-  selectorWrapper: {
+  selector: {
     marginTop: 6,
     marginBottom: 12,
     borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: "#2563EB",
-    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.25)",
+    backgroundColor: "rgba(255,255,255,0.06)"
   },
-  select: { borderWidth: 0, backgroundColor: "transparent" },
-  selectInner: {
+  selectorInner: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 12,
-    paddingHorizontal: 10,
+    paddingHorizontal: 10
   },
-  selectorText: { color: "#111827", fontSize: 14 },
-  icon: { marginRight: 6 },
+  selectorText: {
+    flex: 1,
+    color: "#fff",
+    fontSize: 15,
+    marginLeft: 6
+  },
+  footer: {
+    textAlign: "center",
+    color: "#A5B4FC",
+    marginTop: 16,
+    fontSize: 14
+  },
+  link: { color: "#93C5FD", fontWeight: "700" },
   toast: {
     position: "absolute",
-    bottom: 30,
-    left: 20,
-    right: 20,
+    bottom: 20,
+    left: 10,
+    right: 10,
     padding: 14,
-    borderRadius: 8,
-    alignItems: "center",
+    borderRadius: 10,
+    alignItems: "center"
   },
-  toastText: { color: "#fff", fontSize: 14, fontWeight: "600" },
+  toastText: { color: "#fff", fontWeight: "700" },
   toastSuccess: { backgroundColor: "#16A34A" },
-  toastError: { backgroundColor: "#DC2626" },
+  toastError: { backgroundColor: "#DC2626" }
 })
