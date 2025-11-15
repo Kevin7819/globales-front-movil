@@ -1,16 +1,16 @@
 import { Feather } from "@expo/vector-icons"
 import { useRouter } from "expo-router"
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
   ActivityIndicator,
+  Animated,
+  Dimensions,
   Platform,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
-  Animated,
-  Dimensions
+  View
 } from "react-native"
 import DateTimePickerModal from "react-native-modal-datetime-picker"
 import ModalSelector from "react-native-modal-selector"
@@ -29,7 +29,7 @@ export default function RegisterScreen() {
   const [loadingData, setLoadingData] = useState(true)
   const [loading, setLoading] = useState(false)
   const [showDatePicker, setShowDatePicker] = useState(false)
-  const [toast, setToast] = useState(null)
+  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null)
 
   const [form, setForm] = useState({
     firstName: "",
@@ -247,13 +247,17 @@ export default function RegisterScreen() {
               <ModalSelector
                 data={countries}
                 initValue="Selecciona tu país"
-                onChange={(o) => handleChange("countryOfOrigin", o.label)}
-                style={styles.selector}
-                selectStyle={styles.selectorInner}
+                onChange={(option: any) => handleChange("countryOfOrigin", option.label)}
+                style={styles.selectorWrapper}
+                initValueTextStyle={styles.selectorText}
                 selectTextStyle={styles.selectorText}
-                optionTextStyle={{ color: "#000" }}
+                selectStyle={styles.select}
+                cancelText="Cancelar"
+                optionTextStyle={styles.optionText}
+                optionStyle={styles.optionItem}
+                overlayStyle={styles.optionsOverlay}
               >
-                <View style={styles.selectorInner}>
+                <View style={styles.selectInner}>
                   <Feather name="map-pin" size={18} color="#93C5FD" />
                   <Text style={styles.selectorText}>
                     {form.countryOfOrigin || "Selecciona tu país"}
@@ -269,13 +273,17 @@ export default function RegisterScreen() {
               <ModalSelector
                 data={languages}
                 initValue="Selecciona tu idioma"
-                onChange={(o) => handleChange("preferredLanguage", o.label)}
-                style={styles.selector}
-                selectStyle={styles.selectorInner}
+                onChange={(option: any) => handleChange("preferredLanguage", option.label)}
+                style={styles.selectorWrapper}
+                initValueTextStyle={styles.selectorText}
                 selectTextStyle={styles.selectorText}
-                optionTextStyle={{ color: "#000" }}
+                selectStyle={styles.select}
+                cancelText="Cancelar"
+                optionTextStyle={styles.optionText}
+                optionStyle={styles.optionItem}
+                overlayStyle={styles.optionsOverlay}
               >
-                <View style={styles.selectorInner}>
+                <View style={styles.selectInner}>
                   <Feather name="globe" size={18} color="#93C5FD" />
                   <Text style={styles.selectorText}>
                     {form.preferredLanguage || "Selecciona tu idioma"}
@@ -386,7 +394,7 @@ const styles = StyleSheet.create({
   dateNative: {
     flex: 1,
     backgroundColor: "transparent",
-    border: "none",
+    borderWidth: 0,
     color: "#fff"
   },
   dateText: {
@@ -401,6 +409,24 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.25)",
     backgroundColor: "rgba(255,255,255,0.06)"
   },
+  selectorWrapper: {
+  marginTop: 10,
+  marginBottom: 12,
+  borderRadius: 12,
+  borderWidth: 1,
+  borderColor: "rgba(255,255,255,0.25)",
+  backgroundColor: "rgba(255,255,255,0.08)",
+},
+  select: { borderWidth: 0, backgroundColor: "transparent" },
+  selectInner: {
+  flexDirection: "row",
+  alignItems: "center",
+  paddingVertical: 14,
+  paddingHorizontal: 2,
+},
+  optionText: { color: "#0F172A", fontSize: 14 },
+  optionItem: { paddingVertical: 8, paddingHorizontal: 12 },
+  optionsOverlay: { backgroundColor: "rgba(0,0,0,0.6)" },
   selectorInner: {
     flexDirection: "row",
     alignItems: "center",
@@ -408,11 +434,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10
   },
   selectorText: {
-    flex: 1,
-    color: "#fff",
-    fontSize: 15,
-    marginLeft: 6
-  },
+  flex: 1,
+  color: "#E2E8F0",
+  fontSize: 15,
+  marginLeft: 6
+},
   footer: {
     textAlign: "center",
     color: "#A5B4FC",

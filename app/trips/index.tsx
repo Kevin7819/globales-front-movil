@@ -80,6 +80,27 @@ export default function TripsScreen() {
     fetchTrips();
   }, [fetchTrips]);
 
+  // Si llegamos con ?tripId=xxxx abrimos automáticamente el modal con ese viaje
+  // Si navegamos desde Dashboard pidiendo abrir un viaje, lo leemos desde AsyncStorage
+  useEffect(() => {
+    const checkOpenId = async () => {
+      try {
+        const openId = await AsyncStorage.getItem("openTripId");
+        if (openId && trips.length > 0) {
+          const found = trips.find((t) => String(t.tripId) === String(openId));
+          if (found) {
+            setSelectedTrip(found);
+            setIsModalOpen(true);
+          }
+          await AsyncStorage.removeItem("openTripId");
+        }
+      } catch (e) {
+        // ignore
+      }
+    };
+    checkOpenId();
+  }, [trips]);
+
   // Datos a mostrar
   const stats = {
     upcomingTrips: trips.filter(trip => new Date(trip.departureDate) > new Date()).length,
@@ -175,7 +196,7 @@ export default function TripsScreen() {
       fetchTrips();
       Alert.alert("Éxito", "Viaje reclamado correctamente");
     } catch (err: any) {
-      setClaimError(err.response?.data?.message || "Error al reclamar el viaje. Verifica el código.");
+      setClaimError(err.response?.data?.message || "Error al agregar el viaje. Verifica el código.");
     } finally {
       setClaimLoading(false);
     }
@@ -318,7 +339,7 @@ export default function TripsScreen() {
               <Ionicons name="add-circle" size={24} color="#FFFFFF" />
             </View>
             <View style={styles.actionTextContainer}>
-              <Text style={styles.actionTitle}>Reclamar Nuevo Viaje</Text>
+              <Text style={styles.actionTitle}>Agregar Nuevo Viaje</Text>
               <Text style={styles.actionSubtitle}>Usa tu código de reserva</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
@@ -348,14 +369,14 @@ export default function TripsScreen() {
               <Ionicons name="airplane-outline" size={64} color="#CBD5E1" />
               <Text style={styles.emptyTitle}>No tienes viajes programados</Text>
               <Text style={styles.emptyMessage}>
-                Usa tu código de reserva para reclamar tu viaje y comenzar a planificar tu próxima aventura con Orbis Airlines.
+                Usa tu código de reserva para agregar tu viaje y comenzar a planificar tu próxima aventura con Orbis Airlines.
               </Text>
               <TouchableOpacity 
                 style={styles.primaryButton}
                 onPress={handleOpenClaimModal}
               >
                 <Ionicons name="add" size={20} color="#FFFFFF" />
-                <Text style={styles.primaryButtonText}>Reclamar Mi Viaje</Text>
+                <Text style={styles.primaryButtonText}>Agregar Mi Viaje</Text>
               </TouchableOpacity>
             </View>
           </Card>
@@ -555,7 +576,7 @@ export default function TripsScreen() {
                   <Ionicons name="key" size={24} color="#05A6A6" />
                 </View>
                 <View>
-                  <Text style={styles.modalTitle}>Reclamar Viaje</Text>
+                  <Text style={styles.modalTitle}>Agregar Viaje</Text>
                   <Text style={styles.modalSubtitle}>Ingresa tu código de reserva</Text>
                 </View>
               </View>
@@ -611,7 +632,7 @@ export default function TripsScreen() {
                     <Ionicons name="add" size={20} color="#fff" />
                   )}
                   <Text style={styles.primaryButtonText}>
-                    {claimLoading ? "Reclamando..." : "Reclamar Viaje"}
+                    {claimLoading ? "Agregando..." : "Agregar Viaje"}
                   </Text>
                 </TouchableOpacity>
 

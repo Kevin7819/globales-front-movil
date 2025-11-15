@@ -230,7 +230,7 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#EEF2FF",
+    backgroundColor: "#0A0F29",
   },
   header: {
     paddingHorizontal: 16,
@@ -239,8 +239,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-    backgroundColor: "#fff",
+    borderBottomColor: "rgba(255,255,255,0.06)",
+    backgroundColor: "transparent",
     boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.05)",
     elevation: 1,
   },
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
   headerTitle: { 
     fontSize: 18, 
     fontWeight: "700", 
-    color: "#111827" 
+    color: "#E0EAFF" 
   },
   actions: { 
     flexDirection: "row", 
@@ -263,30 +263,30 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 6,
     borderWidth: 1,
-    borderColor: "#2563EB",
+    borderColor: "#93C5FD",
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    backgroundColor: "#fff",
+    backgroundColor: "transparent",
   },
   langText: { 
-    color: "#2563EB", 
+    color: "#93C5FD", 
     fontWeight: "600" 
   },
   clearBtn: {
     borderWidth: 1,
-    borderColor: "#DC2626",
+    borderColor: "#FCA5A5",
     borderRadius: 999,
     padding: 6,
-    backgroundColor: "#fff",
+    backgroundColor: "transparent",
   },
   listContent: { 
-    padding: 12, 
-    paddingBottom: 80 
+    padding: 16, 
+    paddingBottom: 110 
   },
   row: { 
     width: "100%", 
-    marginVertical: 4, 
+    marginVertical: 6, 
     flexDirection: "row" 
   },
   left: { 
@@ -304,15 +304,15 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   bubbleUser: { 
-    backgroundColor: "#2563EB" 
+    backgroundColor: "#6366F1" 
   },
   bubbleAssistant: {
-    backgroundColor: "#fff",
+    backgroundColor: "rgba(255,255,255,0.04)",
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "rgba(255,255,255,0.06)",
   },
   bubbleSystem: { 
-    backgroundColor: "#E0E7FF" 
+    backgroundColor: "#16A34A",
   },
   bubbleError: {
     backgroundColor: "#FEE2E2",
@@ -326,24 +326,24 @@ const styles = StyleSheet.create({
     color: "#fff" 
   },
   textAssistant: { 
-    color: "#111827" 
+    color: "#E0EAFF" 
   },
   textError: { 
     color: "#991B1B" 
   },
   inputBar: {
     position: "absolute",
-    bottom: 8,
-    left: 8,
-    right: 8,
+    bottom: 12,
+    left: 12,
+    right: 12,
     flexDirection: "row",
     gap: 8,
     alignItems: "flex-end",
-    backgroundColor: "#fff",
+    backgroundColor: "rgba(255,255,255,0.04)",
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#CBD5E1",
-    padding: 8,
+    borderColor: "rgba(255,255,255,0.06)",
+    padding: 10,
     boxShadow: "0 1px 4px 0 rgba(0, 0, 0, 0.05)",
     elevation: 2, 
   },
@@ -354,10 +354,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 6,
     fontSize: 14,
-    color: "#111827",
+    color: "#E0EAFF",
   },
   sendBtn: {
-    backgroundColor: "#2563EB",
+    backgroundColor: "#93C5FD",
     borderRadius: 10,
     padding: 10,
     justifyContent: "center",

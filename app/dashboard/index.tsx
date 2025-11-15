@@ -1,10 +1,11 @@
 import { Feather, Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   Dimensions,
   ImageBackground,
   Platform,
@@ -13,7 +14,6 @@ import {
   Text,
   TouchableOpacity,
   View,
-  Animated,
 } from "react-native";
 
 import { Avatar } from "../../components/ui/Avatar";
@@ -165,7 +165,6 @@ export default function DashboardScreen() {
                     src={user?.avatar || ""}
                     fallback={user?.name?.[0]?.toUpperCase() || "?"}
                     size={42}
-                    style={styles.avatar}
                   />
                 </TouchableOpacity>
               </View>
@@ -266,7 +265,14 @@ export default function DashboardScreen() {
 
                       <TouchableOpacity
                         style={styles.tripButton}
-                        onPress={() => router.push({ pathname: "/trips", params: { tripId: trip.tripId } })}
+                        onPress={async () => {
+                          try {
+                            await AsyncStorage.setItem("openTripId", String(trip.tripId));
+                          } catch (e) {
+                            console.warn("No se pudo guardar openTripId", e);
+                          }
+                          router.push("/trips");
+                        }}
                       >
                         <Text style={styles.tripButtonText}>Ver Detalles</Text>
                         <Ionicons name="arrow-forward" size={16} color="#93C5FD" />
@@ -291,7 +297,6 @@ export default function DashboardScreen() {
                   src={user?.avatar || ""}
                   fallback={user?.name?.[0]?.toUpperCase() || "?"}
                   size={60}
-                  style={styles.travelerAvatar}
                 />
                 <View style={styles.travelerDetails}>
                   <Text style={styles.travelerName}>{user?.name}</Text>
@@ -517,13 +522,13 @@ const styles = StyleSheet.create({
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 8 },
     marginHorizontal: 20,
-    marginTop: -30,
+    marginTop: 10,
     zIndex: 2,
   },
 
   quickActions: {
-    marginTop: 8,
-    paddingVertical: 14,
+    marginTop: 12,
+    paddingVertical: 18,
   },
 
   sectionTitle: {
@@ -536,10 +541,12 @@ const styles = StyleSheet.create({
   actionsGrid: {
     flexDirection: "row",
     justifyContent: "space-between",
+    paddingHorizontal: 6,
   },
   actionCard: {
     alignItems: "center",
     flex: 1,
+    marginHorizontal: 6,
   },
   actionIcon: {
     width: 56,
@@ -561,15 +568,15 @@ const styles = StyleSheet.create({
   },
 
   section: {
-    marginTop: 16,
-    marginBottom: 8,
+    marginTop: 36,
+    marginBottom: 24,
   },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginHorizontal: 20,
-    marginBottom: 8,
+    marginHorizontal: 24,
+    marginBottom: 12,
   },
   seeAllButton: {
     flexDirection: "row",
@@ -589,6 +596,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.06)",
     borderStyle: "dashed",
     backgroundColor: "transparent",
+    marginHorizontal: 20,
   },
   emptyContent: {
     alignItems: "center",
@@ -623,18 +631,18 @@ const styles = StyleSheet.create({
   },
 
   tripsScroll: {
-    marginHorizontal: -20,
+    marginHorizontal: -10,
   },
   tripsContainer: {
-    paddingHorizontal: 20,
-    gap: 12,
+    paddingHorizontal: 24,
+    gap: 16,
   },
   tripCard: {
     width: width * 0.75,
-    padding: 14,
+    padding: 16,
     borderRadius: 14,
     backgroundColor: "transparent",
-    marginRight: 12,
+    marginRight: 16,
   },
   tripHeader: {
     flexDirection: "row",
@@ -713,8 +721,8 @@ const styles = StyleSheet.create({
 
   travelerCard: {
     marginHorizontal: 20,
-    marginBottom: 12,
-    padding: 16,
+    marginBottom: 18,
+    padding: 18,
     borderRadius: 14,
     backgroundColor: "transparent",
   },
@@ -788,7 +796,7 @@ const styles = StyleSheet.create({
   servicesGrid: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginHorizontal: 20,
+    marginHorizontal: 24,
   },
   serviceCard: {
     alignItems: "center",
@@ -814,7 +822,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#A5B4FC",
     textAlign: "center",
-    marginTop: 12,
+    marginTop: 14,
     fontStyle: "italic",
   },
 
